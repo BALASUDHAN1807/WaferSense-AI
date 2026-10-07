@@ -1,0 +1,11 @@
+# Python 3.10 - 3.12 recommended (TensorFlow supports these on Windows)
+tensorflow>=2.16
+keras>=3.0
+numpy
+pandas
+matplotlib
+scikit-learn
+opencv-python
+Pillow
+gradio>=4.0
+pytest

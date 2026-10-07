@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Gradio
+.gradio/
+flagged/
+
+# Large trained models (> GitHub's 100 MB limit) - retrain with run_project.py
+models/resnet50_model.keras
+
+# Temporary files
+temp_*.png
+tmp_old/
