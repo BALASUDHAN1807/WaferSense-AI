@@ -13,10 +13,11 @@
     python run_project.py compare              comparison table + best-model selection
     python run_project.py predict IMAGE        predict one wafer image with the best model
     python run_project.py summary              write results/reports/final_project_summary.json
+    python run_project.py report               write report/Project_Report.md + README results
     python run_project.py test                 run the pytest suite
     python run_project.py app                  start the Gradio web app
     python run_project.py all                  validate -> eda -> preprocess -> train-all
-                                               -> evaluate -> compare -> summary
+                                               -> evaluate -> compare -> summary -> report
 
 Extra arguments after the command are passed through (e.g. --epochs 5).
 Evaluation never retrains a model.
@@ -118,6 +119,7 @@ def cmd_all(args):
         ("evaluate", lambda: cmd_evaluate([])),
         ("compare", lambda: cmd_compare([])),
         ("summary", lambda: cmd_summary([])),
+        ("report", lambda: _run("make_report")),
     ]
     for name, fn in steps:
         print(f"\n{'=' * 70}\n>>> {name}\n{'=' * 70}")
@@ -143,6 +145,7 @@ COMMANDS = {
     "compare": cmd_compare,
     "predict": cmd_predict,
     "summary": cmd_summary,
+    "report": lambda a: _run("make_report"),
     "test": cmd_test,
     "app": cmd_app,
     "all": cmd_all,

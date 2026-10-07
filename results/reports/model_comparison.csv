@@ -1,0 +1,2 @@
+Model,Accuracy,Macro Precision,Macro Recall,Macro F1,Training Time (s),Inference Time (ms/image),Parameters,Weights,Model Path
+CNN,0.9703703703703703,0.9712301587301587,0.9703703703703704,0.9703374119391918,66.58,2.6385,1142537,random init (trained from scratch),models/cnn_model.keras

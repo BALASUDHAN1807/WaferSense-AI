@@ -1,0 +1,20 @@
+{
+  "image": "dataset/images/Donut/donut_0003.png",
+  "predicted_class": "Donut",
+  "confidence": 1.0,
+  "confidence_percent": 100.0,
+  "confidence_interpretation": "Very high confidence",
+  "all_class_probabilities": {
+    "Donut": 1.0,
+    "Loc": 0.0,
+    "Scratch": 0.0,
+    "Random": 0.0,
+    "Near-Full": 0.0,
+    "None": 0.0,
+    "Edge-Ring": 0.0,
+    "Edge-Loc": 0.0,
+    "Center": 0.0
+  },
+  "model": "CNN",
+  "note": "Confidence is the model's probability, not a guarantee of the physical defect."
+}
