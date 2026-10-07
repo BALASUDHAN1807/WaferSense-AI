@@ -1,0 +1,22 @@
+{
+  "model": "CNN",
+  "model_path": "models/cnn_model.keras",
+  "weights_source": "random init (trained from scratch)",
+  "total_parameters": 1142537,
+  "trainable_parameters": 1142537,
+  "training_time_seconds": 66.58,
+  "epochs_configured": 30,
+  "epochs_completed": 30,
+  "best_epoch": 28,
+  "best_val_accuracy": 0.9925925731658936,
+  "val_accuracy_at_best_epoch": 0.9925925731658936,
+  "final_val_accuracy": 0.9555555582046509,
+  "best_val_loss": 0.034222282469272614,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "optimizer": "Adam",
+  "loss": "sparse_categorical_crossentropy",
+  "augmentation": "random 90-degree rotation + horizontal flip (train only)",
+  "train_samples": 630,
+  "val_samples": 135
+}

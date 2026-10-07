@@ -1,0 +1,70 @@
+{
+  "total_samples": 900,
+  "num_classes": 9,
+  "class_counts": {
+    "Center": 100,
+    "Donut": 100,
+    "Edge-Loc": 100,
+    "Edge-Ring": 100,
+    "Loc": 100,
+    "Near-Full": 100,
+    "Random": 100,
+    "Scratch": 100,
+    "None": 100
+  },
+  "class_percentages": {
+    "Center": 11.11,
+    "Donut": 11.11,
+    "Edge-Loc": 11.11,
+    "Edge-Ring": 11.11,
+    "Loc": 11.11,
+    "Near-Full": 11.11,
+    "Random": 11.11,
+    "Scratch": 11.11,
+    "None": 11.11
+  },
+  "is_balanced": true,
+  "missing_values_in_labels_csv": 0,
+  "duplicate_records": 0,
+  "image_width": {
+    "min": 64,
+    "max": 64,
+    "mean": 64.0
+  },
+  "image_height": {
+    "min": 64,
+    "max": 64,
+    "mean": 64.0
+  },
+  "pixel_stats": {
+    "min": 0,
+    "max": 255,
+    "mean": 93.298,
+    "std": 81.498,
+    "unique_values": [
+      0,
+      127,
+      255
+    ]
+  },
+  "defect_ratio_per_class_mean": {
+    "Center": 0.0665,
+    "Donut": 0.1537,
+    "Edge-Loc": 0.0293,
+    "Edge-Ring": 0.1618,
+    "Loc": 0.0296,
+    "Near-Full": 0.8407,
+    "Random": 0.2027,
+    "Scratch": 0.0362,
+    "None": 0.0139
+  },
+  "dataset_type": "synthetic (programmatically generated, not real fab data)",
+  "graphs": [
+    "results/graphs/class_distribution.png",
+    "results/graphs/sample_wafer_maps.png",
+    "results/graphs/image_dimensions.png",
+    "results/graphs/pixel_intensity_histogram.png",
+    "results/graphs/defect_ratio_per_class.png",
+    "results/graphs/mean_defect_map_per_class.png"
+  ]
+}

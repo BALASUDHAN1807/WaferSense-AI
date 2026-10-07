@@ -1,0 +1,30 @@
+{
+  "total_records": 900,
+  "valid_images": 900,
+  "missing_images": 0,
+  "unreadable_images": 0,
+  "duplicate_records": 0,
+  "duplicate_image_content": 0,
+  "invalid_labels": [],
+  "missing_classes": [],
+  "image_sizes": {
+    "64x64": 900
+  },
+  "image_modes": {
+    "L": 900
+  },
+  "class_distribution": {
+    "Center": 100,
+    "Donut": 100,
+    "Edge-Loc": 100,
+    "Edge-Ring": 100,
+    "Loc": 100,
+    "Near-Full": 100,
+    "Random": 100,
+    "Scratch": 100,
+    "None": 100
+  },
+  "examples_missing": [],
+  "examples_unreadable": [],
+  "passed": true
+}
