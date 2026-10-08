@@ -1,0 +1,86 @@
+{
+  "project": "AI-Based Semiconductor Wafer Defect Pattern Detection System",
+  "dataset_type": "synthetic (programmatically generated; not real fab data)",
+  "dataset_size": 900,
+  "class_counts": {
+    "Center": 100,
+    "Donut": 100,
+    "Edge-Loc": 100,
+    "Edge-Ring": 100,
+    "Loc": 100,
+    "Near-Full": 100,
+    "Random": 100,
+    "Scratch": 100,
+    "None": 100
+  },
+  "split_counts": {
+    "train": 630,
+    "val": 135,
+    "test": 135
+  },
+  "models": {
+    "CNN": {
+      "accuracy": 0.9704,
+      "macro_precision": 0.9712,
+      "macro_recall": 0.9704,
+      "macro_f1": 0.9703,
+      "training_time_seconds": 66.58,
+      "inference_time_ms_per_image": 1.2102,
+      "epochs_completed": 30,
+      "weights_source": "random init (trained from scratch)",
+      "misclassified_test_images": 4,
+      "parameters": 1142537
+    },
+    "ResNet50": {
+      "accuracy": 0.9333,
+      "macro_precision": 0.9355,
+      "macro_recall": 0.9333,
+      "macro_f1": 0.9334,
+      "training_time_seconds": 797.59,
+      "inference_time_ms_per_image": 45.1077,
+      "epochs_completed": 20,
+      "weights_source": "imagenet (frozen base)",
+      "misclassified_test_images": 9,
+      "parameters": 23851145
+    },
+    "EfficientNetB0": {
+      "accuracy": 0.9481,
+      "macro_precision": 0.9558,
+      "macro_recall": 0.9481,
+      "macro_f1": 0.9481,
+      "training_time_seconds": 354.11,
+      "inference_time_ms_per_image": 19.2279,
+      "epochs_completed": 20,
+      "weights_source": "imagenet (frozen base)",
+      "misclassified_test_images": 7,
+      "parameters": 4214700
+    }
+  },
+  "best_model": {
+    "model_name": "CNN",
+    "model_path": "models/cnn_model.keras",
+    "selection_metric": "macro_f1",
+    "metric_value": 0.9703374119391918,
+    "accuracy": 0.9703703703703703,
+    "inference_time_ms_per_image": 1.2102,
+    "weights_source": "random init (trained from scratch)",
+    "tie_breakers": [
+      "accuracy",
+      "inference_time"
+    ],
+    "tie_margin": 0.005,
+    "reason": "CNN has the highest macro F1 (0.9703), ahead of the next model by 0.0223.",
+    "compared_models": [
+      "CNN",
+      "ResNet50",
+      "EfficientNetB0"
+    ]
+  },
+  "environment": {
+    "python": "3.13.16",
+    "tensorflow": "2.21.0",
+    "platform": "Linux-6.18.44-fc-v80-x86_64-with-glibc2.39",
+    "processor": "x86_64"
+  },
+  "seed": 42
+}

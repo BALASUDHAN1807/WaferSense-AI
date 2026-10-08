@@ -1,0 +1,22 @@
+{
+  "model": "ResNet50",
+  "model_path": "models/resnet50_model.keras",
+  "weights_source": "imagenet (frozen base)",
+  "total_parameters": 23851145,
+  "trainable_parameters": 263433,
+  "training_time_seconds": 797.59,
+  "epochs_configured": 20,
+  "epochs_completed": 20,
+  "best_epoch": 20,
+  "best_val_accuracy": 0.9259259104728699,
+  "val_accuracy_at_best_epoch": 0.9259259104728699,
+  "final_val_accuracy": 0.9259259104728699,
+  "best_val_loss": 0.2261412888765335,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "optimizer": "Adam",
+  "loss": "sparse_categorical_crossentropy",
+  "augmentation": "random 90-degree rotation + horizontal flip (train only)",
+  "train_samples": 630,
+  "val_samples": 135
+}

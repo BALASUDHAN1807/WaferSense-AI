@@ -75,7 +75,9 @@ def _examples() -> list:
         return []
 
 
-with gr.Blocks(title="Semiconductor Wafer Defect Detection AI") as demo:
+CSS = "#wafer-input img {width: 280px !important; height: 280px !important; object-fit: contain; image-rendering: pixelated;}"
+
+with gr.Blocks(title="Semiconductor Wafer Defect Detection AI", css=CSS) as demo:
     gr.Markdown(
         "# AI-Based Semiconductor Wafer Defect Pattern Detection\n"
         "Upload a **wafer-map image** (black = outside the wafer, grey = good die, "
@@ -85,7 +87,8 @@ with gr.Blocks(title="Semiconductor Wafer Defect Detection AI") as demo:
     gr.Markdown(_model_markdown())
     with gr.Row():
         with gr.Column(scale=1):
-            image_in = gr.Image(type="pil", label="Upload Wafer Map", image_mode="L", height=320)
+            image_in = gr.Image(type="pil", label="Upload Wafer Map", image_mode="L", height=320,
+                                elem_id="wafer-input")
             with gr.Row():
                 predict_btn = gr.Button("Predict", variant="primary")
                 clear_btn = gr.ClearButton(value="Clear")

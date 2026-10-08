@@ -1,2 +1,4 @@
 Model,Accuracy,Macro Precision,Macro Recall,Macro F1,Training Time (s),Inference Time (ms/image),Parameters,Weights,Model Path
-CNN,0.9703703703703703,0.9712301587301587,0.9703703703703704,0.9703374119391918,66.58,2.6385,1142537,random init (trained from scratch),models/cnn_model.keras
+CNN,0.9703703703703703,0.9712301587301587,0.9703703703703704,0.9703374119391918,66.58,1.2102,1142537,random init (trained from scratch),models/cnn_model.keras
+ResNet50,0.9333333333333333,0.9355203619909501,0.9333333333333333,0.9333805639422992,797.59,45.1077,23851145,imagenet (frozen base),models/resnet50_model.keras
+EfficientNetB0,0.9481481481481482,0.9557748538011696,0.9481481481481482,0.9480815229032203,354.11,19.2279,4214700,imagenet (frozen base),models/efficientnetb0_model.keras

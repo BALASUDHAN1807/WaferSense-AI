@@ -159,11 +159,339 @@
         ]
       ],
       "misclassified": 4,
-      "inference_time_ms_per_image": 2.6385,
+      "inference_time_ms_per_image": 1.2102,
       "training_time_seconds": 66.58,
       "epochs_completed": 30,
       "total_parameters": 1142537,
       "confusion_matrix_image": "results/confusion_matrices/cnn_confusion_matrix.png"
+    },
+    {
+      "model": "ResNet50",
+      "model_path": "models/resnet50_model.keras",
+      "weights_source": "imagenet (frozen base)",
+      "test_samples": 135,
+      "accuracy": 0.9333333333333333,
+      "macro_precision": 0.9355203619909501,
+      "macro_recall": 0.9333333333333333,
+      "macro_f1": 0.9333805639422992,
+      "per_class": {
+        "Center": {
+          "precision": 1.0,
+          "recall": 0.9333,
+          "f1-score": 0.9655
+        },
+        "Donut": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Edge-Loc": {
+          "precision": 0.8462,
+          "recall": 0.7333,
+          "f1-score": 0.7857
+        },
+        "Edge-Ring": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Loc": {
+          "precision": 0.8235,
+          "recall": 0.9333,
+          "f1-score": 0.875
+        },
+        "Near-Full": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Random": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Scratch": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "None": {
+          "precision": 0.75,
+          "recall": 0.8,
+          "f1-score": 0.7742
+        }
+      },
+      "confusion_matrix": [
+        [
+          14,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          15,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          11,
+          0,
+          1,
+          0,
+          0,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          0,
+          15,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          14,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          1,
+          0,
+          0,
+          0,
+          12
+        ]
+      ],
+      "misclassified": 9,
+      "inference_time_ms_per_image": 45.1077,
+      "training_time_seconds": 797.59,
+      "epochs_completed": 20,
+      "total_parameters": 23851145,
+      "confusion_matrix_image": "results/confusion_matrices/resnet50_confusion_matrix.png"
+    },
+    {
+      "model": "EfficientNetB0",
+      "model_path": "models/efficientnetb0_model.keras",
+      "weights_source": "imagenet (frozen base)",
+      "test_samples": 135,
+      "accuracy": 0.9481481481481482,
+      "macro_precision": 0.9557748538011696,
+      "macro_recall": 0.9481481481481482,
+      "macro_f1": 0.9480815229032203,
+      "per_class": {
+        "Center": {
+          "precision": 1.0,
+          "recall": 0.9333,
+          "f1-score": 0.9655
+        },
+        "Donut": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Edge-Loc": {
+          "precision": 1.0,
+          "recall": 0.7333,
+          "f1-score": 0.8462
+        },
+        "Edge-Ring": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Loc": {
+          "precision": 0.8125,
+          "recall": 0.8667,
+          "f1-score": 0.8387
+        },
+        "Near-Full": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Random": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "Scratch": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0
+        },
+        "None": {
+          "precision": 0.7895,
+          "recall": 1.0,
+          "f1-score": 0.8824
+        }
+      },
+      "confusion_matrix": [
+        [
+          14,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          15,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          11,
+          0,
+          2,
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          15,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          13,
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15
+        ]
+      ],
+      "misclassified": 7,
+      "inference_time_ms_per_image": 19.2279,
+      "training_time_seconds": 354.11,
+      "epochs_completed": 20,
+      "total_parameters": 4214700,
+      "confusion_matrix_image": "results/confusion_matrices/efficientnetb0_confusion_matrix.png"
     }
   ]
 }

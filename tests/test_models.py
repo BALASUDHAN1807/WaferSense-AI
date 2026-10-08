@@ -40,6 +40,20 @@ def test_wafer_to_rgb_layer(mode):
         assert np.allclose(y[0, 0, 0], 255.0 - np.array([103.939, 116.779, 123.68]), atol=1e-3)
 
 
+@pytest.mark.parametrize("builder", [models.build_resnet50, models.build_efficientnet])
+def test_pretrained_model_identical_after_save_and_load(builder, tmp_path, batch):
+    """Regression test: the saved model must behave exactly like the trained one
+    (an un-finalised Normalization layer once made reloaded EfficientNet differ)."""
+    import keras
+    m = builder(use_pretrained=True)
+    if not m.weights_source.startswith("imagenet"):
+        pytest.skip("ImageNet weights not available offline")
+    path = tmp_path / "m.keras"
+    m.save(path)
+    m2 = keras.models.load_model(path)
+    assert np.allclose(m.predict(batch, verbose=0), m2.predict(batch, verbose=0), atol=1e-5)
+
+
 def test_custom_layer_survives_save_and_load(tmp_path, batch):
     import keras
     inp = keras.Input((64, 64, 1))

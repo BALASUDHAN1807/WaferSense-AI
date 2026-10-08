@@ -87,11 +87,60 @@ def _load_backbone(app_fn, size: int, use_pretrained: bool):
             base.trainable = False
             return base, "imagenet (frozen base)"
         except Exception as e:  # no internet / download blocked
-            print(f"[models] Could not load ImageNet weights ({type(e).__name__}: {e}).\n"
-                  "         Falling back to random initialisation with a trainable base.")
+            print(f"[models] Could not load ImageNet weights from Keras ({type(e).__name__}).")
+            if app_fn is keras.applications.EfficientNetB0:
+                try:
+                    base = _efficientnet_b0_from_github(size)
+                    base.trainable = False
+                    print("[models] Loaded EfficientNetB0 ImageNet weights from the GitHub mirror.")
+                    return base, "imagenet (frozen base)"
+                except Exception as e2:
+                    print(f"[models] GitHub mirror also failed ({type(e2).__name__}: {e2}).")
+            print("         Falling back to random initialisation with a trainable base.")
     base = app_fn(include_top=False, weights=None, input_shape=(size, size, 3))
     base.trainable = True
     return base, "random init (trainable base, ImageNet weights unavailable)"
+
+
+EFFNET_B0_MIRROR = ("https://github.com/qubvel/efficientnet/releases/download/v0.0.1/"
+                    "efficientnet-b0_imagenet_1000_notop.h5")
+
+
+def _efficientnet_b0_from_github(size: int) -> keras.Model:
+    """Fallback when Google storage is unreachable: load the ImageNet EfficientNetB0
+    weights published by the original Keras EfficientNet converter (qubvel/efficientnet)
+    on GitHub.  The architecture is identical to keras.applications.EfficientNetB0,
+    so the 130 weighted layers are copied in order after checking every shape.
+    The input normalisation layer is set to the ImageNet mean/std used by those weights.
+    """
+    import h5py
+    import numpy as np
+
+    path = keras.utils.get_file("efficientnet-b0_imagenet_1000_notop.h5", EFFNET_B0_MIRROR,
+                                cache_subdir="models")
+    base = keras.applications.EfficientNetB0(include_top=False, weights=None,
+                                             input_shape=(size, size, 3))
+    with h5py.File(path, "r") as f:
+        names = [n.decode() if isinstance(n, bytes) else n for n in f.attrs["layer_names"]]
+        src = [[f[n][w][()] for w in f[n].attrs["weight_names"]]
+               for n in names if len(f[n].attrs["weight_names"])]
+    dst = [l for l in base.layers if l.weights and not isinstance(l, keras.layers.Normalization)]
+    if len(src) != len(dst):
+        raise ValueError(f"layer count mismatch ({len(src)} vs {len(dst)})")
+    for layer, weights in zip(dst, src):
+        if [tuple(w.shape) for w in layer.get_weights()] != [w.shape for w in weights]:
+            raise ValueError(f"shape mismatch at layer {layer.name}")
+        layer.set_weights(weights)
+    norm = next(l for l in base.layers if isinstance(l, keras.layers.Normalization))
+    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+    var = np.array([0.229, 0.224, 0.225], dtype=np.float32) ** 2
+    norm.set_weights([w if w.ndim == 0 else (mean if i == 0 else var).reshape(w.shape)
+                      for i, w in enumerate(norm.get_weights())])
+    # set_weights only updates the stored statistics; finalize_state() makes the layer
+    # actually use them (keras.models.load_model does this automatically, so without it
+    # the trained model and the reloaded model would normalise inputs differently).
+    norm.finalize_state()
+    return base
 
 
 def _transfer_model(name: str, app_fn, mode: str, use_pretrained: bool) -> keras.Model:

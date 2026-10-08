@@ -4,15 +4,17 @@
   "selection_metric": "macro_f1",
   "metric_value": 0.9703374119391918,
   "accuracy": 0.9703703703703703,
-  "inference_time_ms_per_image": 2.6385,
+  "inference_time_ms_per_image": 1.2102,
   "weights_source": "random init (trained from scratch)",
   "tie_breakers": [
     "accuracy",
     "inference_time"
   ],
   "tie_margin": 0.005,
-  "reason": "CNN has the highest macro F1 (0.9703).",
+  "reason": "CNN has the highest macro F1 (0.9703), ahead of the next model by 0.0223.",
   "compared_models": [
-    "CNN"
+    "CNN",
+    "ResNet50",
+    "EfficientNetB0"
   ]
 }
