@@ -1,0 +1,22 @@
+{
+  "model": "yolo_seg",
+  "base_weights": "yolo11n-seg.pt",
+  "weights": "models/segmenter_yolo11n_seg.pt",
+  "imgsz": 256,
+  "batch": 16,
+  "epochs_configured": 25,
+  "epochs_completed": 25,
+  "best_epoch": 23,
+  "training_time_seconds": 2302.9,
+  "best_val": {
+    "precision(B)": 0.7733,
+    "recall(B)": 0.6752,
+    "mAP50(B)": 0.6893,
+    "mAP50-95(B)": 0.4799,
+    "precision(M)": 0.736,
+    "recall(M)": 0.6293,
+    "mAP50(M)": 0.6433,
+    "mAP50-95(M)": 0.3722
+  },
+  "device": "cpu"
+}

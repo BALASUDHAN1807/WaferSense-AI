@@ -31,6 +31,7 @@ RUNS_DIR = RESULT_DIR / "runs"              # ultralytics training runs
 INSPECTION_IMG_DIR = RESULT_DIR / "inspections"
 DB_PATH = RESULT_DIR / "inspections.db"
 BEST_PIPELINE_FILE = REPORT_DIR / "best_pipeline.json"
+THRESHOLDS_FILE = REPORT_DIR / "tuned_thresholds.json"
 
 RULES_FILE = ROOT / "configs" / "quality_rules.yaml"
 
@@ -59,8 +60,10 @@ UNET = {"base_channels": 16, "epochs": 30, "batch": 16, "lr": 2e-3, "patience": 
 
 # -------------------------------------------------------------- inference
 DET_CONF = 0.40
-SEG_CONF = 0.25
+SEG_CONF = 0.25           # defaults; replaced by values tuned on the validation split
 MIN_DEFECT_PIXELS = 6     # ignore specks smaller than this (crop pixels)
+TUNE_SEG_CONF = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+TUNE_MIN_PIXELS = [6, 15, 30, 60, 100, 150, 250]
 
 # GitHub release with the pretrained YOLO11 weights (used when not cached locally)
 YOLO_ASSET_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/{name}"

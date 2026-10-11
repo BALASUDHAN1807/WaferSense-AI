@@ -1,0 +1,788 @@
+{
+  "yolo": {
+    "seg_conf": 0.1,
+    "min_pixels": 6,
+    "val_macro_f1": 0.8465032428742106,
+    "val_accuracy": 0.8518518518518519,
+    "val_devices": 189,
+    "default_0.2_6": {
+      "seg_conf": 0.2,
+      "min_pixels": 6,
+      "val_macro_f1": 0.8278981284246346,
+      "val_accuracy": 0.8359788359788359
+    },
+    "grid": [
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 6,
+        "val_macro_f1": 0.8465032428742106,
+        "val_accuracy": 0.8518518518518519
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 15,
+        "val_macro_f1": 0.8384024577572964,
+        "val_accuracy": 0.8465608465608465
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 30,
+        "val_macro_f1": 0.8327462233656574,
+        "val_accuracy": 0.8412698412698413
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 60,
+        "val_macro_f1": 0.8228615312121752,
+        "val_accuracy": 0.8306878306878307
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 100,
+        "val_macro_f1": 0.8255829158664744,
+        "val_accuracy": 0.8306878306878307
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 150,
+        "val_macro_f1": 0.8032988168463029,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7391523401334483,
+        "val_accuracy": 0.7513227513227513
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 6,
+        "val_macro_f1": 0.8278981284246346,
+        "val_accuracy": 0.8359788359788359
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 15,
+        "val_macro_f1": 0.8278981284246346,
+        "val_accuracy": 0.8359788359788359
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 30,
+        "val_macro_f1": 0.8195459451647721,
+        "val_accuracy": 0.8306878306878307
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 60,
+        "val_macro_f1": 0.8195459451647721,
+        "val_accuracy": 0.8306878306878307
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 100,
+        "val_macro_f1": 0.8258930843301576,
+        "val_accuracy": 0.8359788359788359
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7996798045817654,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7375760677238681,
+        "val_accuracy": 0.7513227513227513
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 6,
+        "val_macro_f1": 0.8159513022901002,
+        "val_accuracy": 0.8253968253968254
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 15,
+        "val_macro_f1": 0.8159513022901002,
+        "val_accuracy": 0.8253968253968254
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 30,
+        "val_macro_f1": 0.8076705120420967,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 60,
+        "val_macro_f1": 0.8076705120420967,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 100,
+        "val_macro_f1": 0.8096248031487091,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7878739401695728,
+        "val_accuracy": 0.8042328042328042
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7296534491049721,
+        "val_accuracy": 0.746031746031746
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 6,
+        "val_macro_f1": 0.8011001721094195,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 15,
+        "val_macro_f1": 0.8011001721094195,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 30,
+        "val_macro_f1": 0.8011001721094195,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 60,
+        "val_macro_f1": 0.8011001721094195,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7966125899295537,
+        "val_accuracy": 0.8095238095238095
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7833725728462569,
+        "val_accuracy": 0.798941798941799
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7296534491049721,
+        "val_accuracy": 0.746031746031746
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7806013176519414,
+        "val_accuracy": 0.798941798941799
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7806013176519414,
+        "val_accuracy": 0.798941798941799
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7806013176519414,
+        "val_accuracy": 0.798941798941799
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7806013176519414,
+        "val_accuracy": 0.798941798941799
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 100,
+        "val_macro_f1": 0.776053570209927,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7625796939657508,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7218344442714396,
+        "val_accuracy": 0.7407407407407407
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7642023202797429,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7642023202797429,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7642023202797429,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7642023202797429,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7595394444937439,
+        "val_accuracy": 0.7777777777777778
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7460342693897228,
+        "val_accuracy": 0.7671957671957672
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7041195788660292,
+        "val_accuracy": 0.7248677248677249
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7427633851468048,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7427633851468048,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7427633851468048,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7427633851468048,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7379337102316817,
+        "val_accuracy": 0.7566137566137566
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7243571536372576,
+        "val_accuracy": 0.746031746031746
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 250,
+        "val_macro_f1": 0.688750458335326,
+        "val_accuracy": 0.708994708994709
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 6,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 15,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 30,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 60,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 100,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 150,
+        "val_macro_f1": 0.6634536390341416,
+        "val_accuracy": 0.6931216931216931
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 250,
+        "val_macro_f1": 0.6389170907196492,
+        "val_accuracy": 0.6666666666666666
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 6,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 15,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 30,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 60,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 100,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 150,
+        "val_macro_f1": 0.2997259118701244,
+        "val_accuracy": 0.48677248677248675
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 250,
+        "val_macro_f1": 0.2926856884057971,
+        "val_accuracy": 0.48148148148148145
+      }
+    ]
+  },
+  "unet": {
+    "seg_conf": 0.6,
+    "min_pixels": 100,
+    "val_macro_f1": 0.8121866030362762,
+    "val_accuracy": 0.8253968253968254,
+    "val_devices": 189,
+    "default_0.2_6": {
+      "seg_conf": 0.2,
+      "min_pixels": 6,
+      "val_macro_f1": 0.42620046358364116,
+      "val_accuracy": 0.5343915343915344
+    },
+    "grid": [
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 6,
+        "val_macro_f1": 0.42620046358364116,
+        "val_accuracy": 0.5343915343915344
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 15,
+        "val_macro_f1": 0.4574218154080854,
+        "val_accuracy": 0.5608465608465608
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 30,
+        "val_macro_f1": 0.5691980536203984,
+        "val_accuracy": 0.6190476190476191
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 60,
+        "val_macro_f1": 0.651023821937534,
+        "val_accuracy": 0.6984126984126984
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7583359269633779,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7992157391489983,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.1,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7543956043956044,
+        "val_accuracy": 0.7777777777777778
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 6,
+        "val_macro_f1": 0.42620046358364116,
+        "val_accuracy": 0.5343915343915344
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 15,
+        "val_macro_f1": 0.4574218154080854,
+        "val_accuracy": 0.5608465608465608
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 30,
+        "val_macro_f1": 0.5691980536203984,
+        "val_accuracy": 0.6190476190476191
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 60,
+        "val_macro_f1": 0.651023821937534,
+        "val_accuracy": 0.6984126984126984
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7583359269633779,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7992157391489983,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.2,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7543956043956044,
+        "val_accuracy": 0.7777777777777778
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 6,
+        "val_macro_f1": 0.42620046358364116,
+        "val_accuracy": 0.5343915343915344
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 15,
+        "val_macro_f1": 0.4574218154080854,
+        "val_accuracy": 0.5608465608465608
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 30,
+        "val_macro_f1": 0.5691980536203984,
+        "val_accuracy": 0.6190476190476191
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 60,
+        "val_macro_f1": 0.651023821937534,
+        "val_accuracy": 0.6984126984126984
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7583359269633779,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7992157391489983,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.3,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7543956043956044,
+        "val_accuracy": 0.7777777777777778
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 6,
+        "val_macro_f1": 0.42620046358364116,
+        "val_accuracy": 0.5343915343915344
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 15,
+        "val_macro_f1": 0.4574218154080854,
+        "val_accuracy": 0.5608465608465608
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 30,
+        "val_macro_f1": 0.5691980536203984,
+        "val_accuracy": 0.6190476190476191
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 60,
+        "val_macro_f1": 0.651023821937534,
+        "val_accuracy": 0.6984126984126984
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7583359269633779,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7992157391489983,
+        "val_accuracy": 0.8201058201058201
+      },
+      {
+        "seg_conf": 0.4,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7543956043956044,
+        "val_accuracy": 0.7777777777777778
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 6,
+        "val_macro_f1": 0.5476469655448127,
+        "val_accuracy": 0.6137566137566137
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 15,
+        "val_macro_f1": 0.552303337480482,
+        "val_accuracy": 0.6190476190476191
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 30,
+        "val_macro_f1": 0.5957022176190537,
+        "val_accuracy": 0.6507936507936508
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 60,
+        "val_macro_f1": 0.6695017400899754,
+        "val_accuracy": 0.7142857142857143
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7619047619047619,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7925550908601756,
+        "val_accuracy": 0.8148148148148148
+      },
+      {
+        "seg_conf": 0.5,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7474811359703447,
+        "val_accuracy": 0.7724867724867724
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7267737771236401,
+        "val_accuracy": 0.7513227513227513
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7267737771236401,
+        "val_accuracy": 0.7513227513227513
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7306788212360967,
+        "val_accuracy": 0.7566137566137566
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7695586877232913,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 100,
+        "val_macro_f1": 0.8121866030362762,
+        "val_accuracy": 0.8253968253968254
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 150,
+        "val_macro_f1": 0.8075795655741245,
+        "val_accuracy": 0.8253968253968254
+      },
+      {
+        "seg_conf": 0.6,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7554920836418774,
+        "val_accuracy": 0.783068783068783
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7479875634454863,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7479875634454863,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7559976777248548,
+        "val_accuracy": 0.7724867724867724
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7739201974496092,
+        "val_accuracy": 0.7936507936507936
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 100,
+        "val_macro_f1": 0.793181989213596,
+        "val_accuracy": 0.8095238095238095
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7845450988164387,
+        "val_accuracy": 0.8042328042328042
+      },
+      {
+        "seg_conf": 0.7,
+        "min_pixels": 250,
+        "val_macro_f1": 0.7374880268199234,
+        "val_accuracy": 0.7671957671957672
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 6,
+        "val_macro_f1": 0.7426106337005658,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 15,
+        "val_macro_f1": 0.7426106337005658,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 30,
+        "val_macro_f1": 0.7426106337005658,
+        "val_accuracy": 0.7619047619047619
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 60,
+        "val_macro_f1": 0.7506388955614275,
+        "val_accuracy": 0.7671957671957672
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 100,
+        "val_macro_f1": 0.7495691394479707,
+        "val_accuracy": 0.7671957671957672
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7355912061794414,
+        "val_accuracy": 0.7566137566137566
+      },
+      {
+        "seg_conf": 0.8,
+        "min_pixels": 250,
+        "val_macro_f1": 0.6937710437710437,
+        "val_accuracy": 0.7248677248677249
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 6,
+        "val_macro_f1": 0.708080970617578,
+        "val_accuracy": 0.7301587301587301
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 15,
+        "val_macro_f1": 0.708080970617578,
+        "val_accuracy": 0.7301587301587301
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 30,
+        "val_macro_f1": 0.708080970617578,
+        "val_accuracy": 0.7301587301587301
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 60,
+        "val_macro_f1": 0.708080970617578,
+        "val_accuracy": 0.7301587301587301
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 100,
+        "val_macro_f1": 0.708080970617578,
+        "val_accuracy": 0.7301587301587301
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 150,
+        "val_macro_f1": 0.7024810370078912,
+        "val_accuracy": 0.7248677248677249
+      },
+      {
+        "seg_conf": 0.9,
+        "min_pixels": 250,
+        "val_macro_f1": 0.6580096040164288,
+        "val_accuracy": 0.6931216931216931
+      }
+    ]
+  }
+}

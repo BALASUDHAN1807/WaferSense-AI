@@ -62,7 +62,8 @@ def _engine() -> InspectionEngine:
 def health():
     eng = STATE["engine"]
     return {"status": "ok" if eng else "degraded", "segmenter": eng.segmenter if eng else None,
-            "error": STATE["error"], "database": str(C.DB_PATH.relative_to(C.ROOT))}
+            "error": STATE["error"],
+            "database": str(C.DB_PATH.relative_to(C.ROOT) if C.ROOT in C.DB_PATH.parents else C.DB_PATH)}
 
 
 @app.post("/inspect")
@@ -126,7 +127,13 @@ def stats():
 
 @app.get("/rules")
 def rules():
-    return C.load_rules()
+    """Quality rules; an open upper limit (.inf in the YAML) is returned as null."""
+    out = C.load_rules()
+    for rule in out.values():
+        for band in rule["bands"]:
+            if band["max"] == float("inf"):
+                band["max"] = None
+    return out
 
 
 if __name__ == "__main__":

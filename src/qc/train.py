@@ -167,7 +167,7 @@ def train_unet(epochs=None) -> dict:
         m = cv2.imread(str(C.DEFECT_DIR / "train" / "masks" / p.name), cv2.IMREAD_GRAYSCALE)
         counts += np.bincount(m.ravel(), minlength=N_SEG_CLASSES)
     weights = torch.tensor((counts.sum() / np.maximum(counts, 1)) ** 0.5, dtype=torch.float32)
-    weights /= weights[0]
+    weights = weights / weights[0].item()
 
     model = UNet(base=cfg["base_channels"])
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], weight_decay=1e-4)

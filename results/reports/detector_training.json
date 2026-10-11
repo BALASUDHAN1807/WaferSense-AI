@@ -1,0 +1,18 @@
+{
+  "model": "detector",
+  "base_weights": "yolo11n.pt",
+  "weights": "models/detector_yolo11n.pt",
+  "imgsz": 416,
+  "batch": 16,
+  "epochs_configured": 10,
+  "epochs_completed": 10,
+  "best_epoch": 8,
+  "training_time_seconds": 996.2,
+  "best_val": {
+    "precision(B)": 0.9997,
+    "recall(B)": 1.0,
+    "mAP50(B)": 0.995,
+    "mAP50-95(B)": 0.995
+  },
+  "device": "cpu"
+}

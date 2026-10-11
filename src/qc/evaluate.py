@@ -178,6 +178,42 @@ def eval_end_to_end(engine, save_examples: int = 6) -> dict:
     }
 
 
+# ------------------------------------------- threshold tuning (VALIDATION)
+
+def tune_thresholds(segmenter: str) -> dict:
+    """Pick the defect confidence threshold and minimum defect size (crop pixels) that maximise
+    decision macro F1 on the VALIDATION split.  The same grid and procedure are used for both
+    segmenters; the test split is not touched."""
+    from sklearn.metrics import f1_score
+
+    from qc.engine import InspectionEngine
+    from qc.quality import combine
+
+    engine = InspectionEngine(segmenter, seg_conf=min(C.TUNE_SEG_CONF), min_pixels=1)
+    ann = json.loads((C.ANNOTATION_DIR / "val.json").read_text())
+    records = []                     # (gt decision, [(conf, pixels, verdict), ...] or None if missed)
+    for scene in ann["scenes"]:
+        res = engine.inspect(cv2.imread(str(C.DATASET_DIR / scene["image"])))
+        gts = scene["devices"]
+        pairs = dict(match([g["box"] for g in gts], [d.box for d in res.devices]))
+        for i, g in enumerate(gts):
+            dev = res.devices[pairs[i]] if i in pairs else None
+            records.append((g["decision"], None if dev is None else
+                            [(d.confidence, d.pixels, d.verdict) for d in dev.defects]))
+    grid = []
+    y_true = [r[0] for r in records]
+    for conf in C.TUNE_SEG_CONF:
+        for mp in C.TUNE_MIN_PIXELS:
+            y_pred = ["MISSED" if d is None else combine(v for p, n, v in d if p >= conf and n >= mp)
+                      for _, d in records]
+            f1 = f1_score(y_true, y_pred, labels=C.DECISIONS, average="macro", zero_division=0)
+            acc = float(np.mean([t == p for t, p in zip(y_true, y_pred)]))
+            grid.append({"seg_conf": conf, "min_pixels": mp, "val_macro_f1": float(f1), "val_accuracy": acc})
+    best = max(grid, key=lambda g: (round(g["val_macro_f1"], 4), g["val_accuracy"], -g["seg_conf"]))
+    default = next((g for g in grid if g["seg_conf"] == 0.2 and g["min_pixels"] == 6), None)
+    return {**best, "val_devices": len(records), "default_0.2_6": default, "grid": grid}
+
+
 # -------------------------------------------------------------- plots
 
 def _plots(results: dict) -> None:
@@ -277,6 +313,15 @@ def main(argv=None) -> int:
     if "yolo" in segs:
         results["yolo_seg_val"] = eval_yolo_seg()
         print("YOLO-seg:", json.dumps({k: v for k, v in results["yolo_seg_val"].items() if k != "per_class"}))
+    # post-processing thresholds for each segmenter, tuned on the validation split only
+    tuned = {}
+    for s in segs:
+        tuned[s] = tune_thresholds(s)
+        print(f"{SEGMENTERS[s]:12s} tuned on validation: conf >= {tuned[s]['seg_conf']}, "
+              f"min {tuned[s]['min_pixels']} px  (val macro-F1 {tuned[s]['val_macro_f1']:.4f})")
+    _save(tuned, C.THRESHOLDS_FILE.name)
+    results["tuned_thresholds"] = {s: {k: v for k, v in t.items() if k != "grid"} for s, t in tuned.items()}
+
     results["pixel"], results["end_to_end"] = {}, {}
     for s in segs:
         engine = InspectionEngine(s)

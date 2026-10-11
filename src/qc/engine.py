@@ -39,6 +39,7 @@ class DefectResult:
     verdict: str
     reason: str
     polygon: list = field(default_factory=list)       # camera pixels [[x, y], ...]
+    pixels: int = 0                                   # mask size in crop pixels
 
 
 @dataclass
@@ -72,6 +73,15 @@ class InspectionResult:
                 "timings_ms": self.timings_ms, "devices": [asdict(d) for d in self.devices]}
 
 
+def tuned_thresholds(segmenter: str) -> dict:
+    """Confidence / minimum-size thresholds tuned on the VALIDATION split (see evaluate.py)."""
+    if C.THRESHOLDS_FILE.exists():
+        t = json.loads(C.THRESHOLDS_FILE.read_text()).get(segmenter)
+        if t:
+            return {"seg_conf": t["seg_conf"], "min_pixels": t["min_pixels"]}
+    return {"seg_conf": C.SEG_CONF, "min_pixels": C.MIN_DEFECT_PIXELS}
+
+
 def best_segmenter() -> str:
     if C.BEST_PIPELINE_FILE.exists():
         return json.loads(C.BEST_PIPELINE_FILE.read_text())["segmenter"]
@@ -82,7 +92,8 @@ class InspectionEngine:
     """Loads the models once; call .inspect(image) for every frame."""
 
     def __init__(self, segmenter: str | None = None, det_conf: float = C.DET_CONF,
-                 seg_conf: float = C.SEG_CONF, rules: dict | None = None, px_per_mm: float = C.PX_PER_MM):
+                 seg_conf: float | None = None, min_pixels: int | None = None,
+                 rules: dict | None = None, px_per_mm: float = C.PX_PER_MM):
         from ultralytics import YOLO
 
         if not C.DETECTOR_WEIGHTS.exists():
@@ -90,7 +101,10 @@ class InspectionEngine:
         self.segmenter = segmenter or best_segmenter()
         if self.segmenter not in ("yolo", "unet"):
             raise ValueError("segmenter must be 'yolo' or 'unet'")
-        self.det_conf, self.seg_conf, self.ppm = det_conf, seg_conf, px_per_mm
+        tuned = tuned_thresholds(self.segmenter)
+        self.seg_conf = tuned["seg_conf"] if seg_conf is None else seg_conf
+        self.min_pixels = tuned["min_pixels"] if min_pixels is None else min_pixels
+        self.det_conf, self.ppm = det_conf, px_per_mm
         self.rules = rules or C.load_rules()
         self.detector = YOLO(str(C.DETECTOR_WEIGHTS))
         if self.segmenter == "yolo":
@@ -120,8 +134,7 @@ class InspectionEngine:
             if r.masks is not None:
                 for m, c, p in zip(r.masks.data.numpy(), r.boxes.cls.numpy(), r.boxes.conf.numpy()):
                     mask = m > 0.5
-                    if mask.sum() >= C.MIN_DEFECT_PIXELS:
-                        out.append((C.DEFECT_CLASSES[int(c)], float(p), mask))
+                    out.append((C.DEFECT_CLASSES[int(c)], float(p), mask))
         else:
             from qc.unet import to_tensor
             prob = self.seg_model(to_tensor(crop)).softmax(1)[0].numpy()
@@ -129,10 +142,10 @@ class InspectionEngine:
             for k, cls in enumerate(C.DEFECT_CLASSES, start=1):
                 n, labels, stats, _ = cv2.connectedComponentsWithStats((pred == k).astype(np.uint8), 8)
                 for j in range(1, n):
-                    if stats[j, cv2.CC_STAT_AREA] >= C.MIN_DEFECT_PIXELS:
-                        mask = labels == j
-                        out.append((cls, float(prob[k][mask].mean()), mask))
-        return out
+                    mask = labels == j
+                    out.append((cls, float(prob[k][mask].mean()), mask))
+        # identical post-processing for both models: confidence + minimum size (crop pixels)
+        return [(c, p, m) for c, p, m in out if p >= self.seg_conf and m.sum() >= self.min_pixels]
 
     def inspect(self, image: np.ndarray) -> InspectionResult:
         if image is None or image.ndim != 3:
@@ -155,7 +168,7 @@ class InspectionEngine:
                 cnts, _ = cv2.findContours(cam.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 poly = max(cnts, key=cv2.contourArea).reshape(-1, 2).tolist() if cnts else []
                 defects.append(DefectResult(cls, round(p, 4), round(m.area_mm2, 3), round(m.length_mm, 3),
-                                            round(m.width_mm, 3), verdict, reason, poly))
+                                            round(m.width_mm, 3), verdict, reason, poly, int(mask.sum())))
             devices.append(DeviceResult([round(v, 1) for v in box], round(conf, 4),
                                         combine(d.verdict for d in defects), defects))
         t2 = time.perf_counter()

@@ -78,6 +78,16 @@ def confusion_md(e) -> str:
     return "\n".join(rows)
 
 
+def tuning_table(ev) -> str:
+    rows = ["| Segmenter | Confidence ≥ | Min. size (px) | Val. macro F1 (tuned) | Val. macro F1 (default 0.2 / 6 px) |",
+            "|---|---|---|---|---|"]
+    for s, t in ev.get("tuned_thresholds", {}).items():
+        d = t.get("default_0.2_6") or {}
+        rows.append(f"| {NAMES[s]} | {t['seg_conf']} | {t['min_pixels']} | {f(t['val_macro_f1'])} | "
+                    f"{f(d.get('val_macro_f1'))} |")
+    return "\n".join(rows)
+
+
 def training_table() -> str:
     rows = ["| Model | Task | Epochs (run / max) | Best epoch | Training time | Best validation score |",
             "|---|---|---|---|---|---|"]
@@ -299,7 +309,16 @@ For every defect mask: area = pixels × (camera px per crop px)² / ({C.PX_PER_M
 minimum-area rotated rectangle. Defects whose mask lies mostly outside the device box (a neighbouring
 device inside the padded crop) are discarded.
 
-### 7.5 Quality rules (`configs/quality_rules.yaml`)
+### 7.5 Post-processing thresholds (tuned on the validation split)
+Both segmenters use the same post-processing: a predicted defect is kept only if its confidence (YOLO
+score, or mean U-Net class probability over the component) and its size (crop pixels) reach a
+threshold. These two values were chosen per model by a grid search (confidence {C.TUNE_SEG_CONF[0]}–{C.TUNE_SEG_CONF[-1]}, minimum size
+{C.TUNE_MIN_PIXELS[0]}–{C.TUNE_MIN_PIXELS[-1]} px) that maximises decision macro F1 on the **validation** split; the test split was used
+only once, afterwards.
+
+{tuning_table(ev)}
+
+### 7.6 Quality rules (`configs/quality_rules.yaml`)
 
 | Defect | Condition | Verdict | Reason |
 |---|---|---|---|
@@ -395,6 +414,12 @@ Selection criterion: highest end-to-end decision macro F1 on the test split (tie
   Thin structures (scratches, cracks: 1–3 px wide) give low IoU even when correctly found, because a
   one-pixel offset already removes a large part of the overlap — the defect-type recall in 9.4 is the
   more meaningful measure for them.
+- **Why YOLO11-seg wins:** it is pretrained (COCO) and predicts *instances* with a confidence each, so a
+  defect is either reported whole or not at all. The U-Net predicts every pixel independently; without
+  filtering, stray pixels form small fake "cracks" and "missing pins" that scrap good devices — the
+  validation-tuned size/confidence filter (Section 7.5) removes most of them, but some real small defects
+  are removed with them. The U-Net was also trained from scratch on a CPU budget and was still improving
+  when training stopped (Section 8), so more training would narrow the gap.
 - **Decision errors** of the selected pipeline: {err_text}. Most errors occur near a rule threshold
   (e.g. a scratch of ≈ 1.5 mm or ≈ 4 mm, contamination of ≈ 0.5 mm² or ≈ 3 mm²), where a small
   measurement error flips the verdict.
