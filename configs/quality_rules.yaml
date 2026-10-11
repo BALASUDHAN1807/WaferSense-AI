@@ -1,0 +1,48 @@
+# Quality rules: how measured defects become a PASS / REWORK / SCRAP decision.
+#
+# Each defect is judged on its own; the device decision is the most severe
+# verdict of all its defects (no defects -> PASS).
+#
+# Every rule is a list of (limit, verdict) bands checked from top to bottom:
+# the first band whose `max` is greater than the measured value wins.
+# `metric` is the measurement the rule uses:
+#   area_mm2   - defect area in square millimetres
+#   length_mm  - longest dimension of the defect in millimetres
+#   count      - always 1 per defect (use for "any defect of this type")
+#
+# Edit the numbers to match your own quality standard - no code changes needed.
+
+crack:
+  metric: count
+  description: Any crack in the mould compound can propagate to the die -> scrap.
+  bands:
+    - {max: .inf, verdict: SCRAP, reason: "crack in package body"}
+
+missing_pin:
+  metric: count
+  description: A missing lead cannot be soldered -> scrap.
+  bands:
+    - {max: .inf, verdict: SCRAP, reason: "missing lead"}
+
+chip:
+  metric: area_mm2
+  description: Tiny edge chips are cosmetic; larger chips expose the package -> scrap.
+  bands:
+    - {max: 0.5, verdict: PASS, reason: "chip within cosmetic tolerance"}
+    - {max: .inf, verdict: SCRAP, reason: "edge chipping too large"}
+
+scratch:
+  metric: length_mm
+  description: Short scratches are cosmetic, medium ones can be buffed/re-marked, long ones scrap.
+  bands:
+    - {max: 1.5, verdict: PASS, reason: "scratch within cosmetic tolerance"}
+    - {max: 4.0, verdict: REWORK, reason: "scratch - buff and re-mark"}
+    - {max: .inf, verdict: SCRAP, reason: "long scratch"}
+
+contamination:
+  metric: area_mm2
+  description: Small residue is cleanable; large contamination covers marking/leads -> scrap.
+  bands:
+    - {max: 0.5, verdict: PASS, reason: "contamination within tolerance"}
+    - {max: 3.0, verdict: REWORK, reason: "contamination - clean device"}
+    - {max: .inf, verdict: SCRAP, reason: "heavy contamination"}

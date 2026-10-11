@@ -15,13 +15,22 @@ env/
 .DS_Store
 Thumbs.db
 
-# Gradio
+# Generated dataset (~450 MB) - recreate exactly with: python run_project.py generate
+# (dataset/samples/ with a few demo frames IS committed)
+dataset/scenes/
+dataset/defects/
+dataset/annotations/
+
+# Training runs (large); final weights are copied to models/
+results/runs/
+models/pretrained/
+
+# Runtime data
+results/inspections/
+results/inspections.db
+results/conveyor_demo.mp4
+*.mp4
+
+# Tool caches
+.streamlit/secrets.toml
 .gradio/
-flagged/
-
-# Large trained models (> GitHub's 100 MB limit) - retrain with run_project.py
-models/resnet50_model.keras
-
-# Temporary files
-temp_*.png
-tmp_old/

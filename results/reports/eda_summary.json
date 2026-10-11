@@ -1,70 +1,146 @@
 {
-  "total_samples": 900,
-  "num_classes": 9,
-  "class_counts": {
-    "Center": 100,
-    "Donut": 100,
-    "Edge-Loc": 100,
-    "Edge-Ring": 100,
-    "Loc": 100,
-    "Near-Full": 100,
-    "Random": 100,
-    "Scratch": 100,
-    "None": 100
+  "dataset_type": "synthetic (programmatically generated camera images, not photographs)",
+  "camera": {
+    "frame_px": 512,
+    "px_per_mm": 12.0,
+    "field_of_view_mm": 42.7
   },
-  "class_percentages": {
-    "Center": 11.11,
-    "Donut": 11.11,
-    "Edge-Loc": 11.11,
-    "Edge-Ring": 11.11,
-    "Loc": 11.11,
-    "Near-Full": 11.11,
-    "Random": 11.11,
-    "Scratch": 11.11,
-    "None": 11.11
+  "splits": {
+    "train": {
+      "frames": 500,
+      "devices": 963,
+      "decisions": {
+        "PASS": 400,
+        "SCRAP": 395,
+        "REWORK": 168
+      },
+      "devices_per_frame": {
+        "1": 171,
+        "3": 134,
+        "2": 195
+      }
+    },
+    "val": {
+      "frames": 100,
+      "devices": 189,
+      "decisions": {
+        "PASS": 79,
+        "SCRAP": 80,
+        "REWORK": 30
+      },
+      "devices_per_frame": {
+        "2": 47,
+        "1": 32,
+        "3": 21
+      }
+    },
+    "test": {
+      "frames": 150,
+      "devices": 307,
+      "decisions": {
+        "PASS": 132,
+        "SCRAP": 119,
+        "REWORK": 56
+      },
+      "devices_per_frame": {
+        "2": 79,
+        "3": 39,
+        "1": 32
+      }
+    }
   },
-  "is_balanced": true,
-  "missing_values_in_labels_csv": 0,
-  "duplicate_records": 0,
-  "image_width": {
-    "min": 64,
-    "max": 64,
-    "mean": 64.0
+  "total_frames": 750,
+  "total_devices": 1459,
+  "decision_counts": {
+    "PASS": 611,
+    "REWORK": 254,
+    "SCRAP": 594
   },
-  "image_height": {
-    "min": 64,
-    "max": 64,
-    "mean": 64.0
+  "decision_percent": {
+    "PASS": 41.9,
+    "REWORK": 17.4,
+    "SCRAP": 40.7
   },
-  "pixel_stats": {
-    "min": 0,
-    "max": 255,
-    "mean": 93.298,
-    "std": 81.498,
-    "unique_values": [
-      0,
-      127,
-      255
-    ]
+  "defect_instances": {
+    "crack": 161,
+    "scratch": 514,
+    "contamination": 521,
+    "chip": 152,
+    "missing_pin": 152
   },
-  "defect_ratio_per_class_mean": {
-    "Center": 0.0665,
-    "Donut": 0.1537,
-    "Edge-Loc": 0.0293,
-    "Edge-Ring": 0.1618,
-    "Loc": 0.0296,
-    "Near-Full": 0.8407,
-    "Random": 0.2027,
-    "Scratch": 0.0362,
-    "None": 0.0139
+  "defects_per_device": {
+    "0": 422,
+    "1": 694,
+    "2": 223,
+    "3": 120
   },
-  "dataset_type": "synthetic (programmatically generated, not real fab data)",
+  "defect_sizes": {
+    "crack": {
+      "area_mm2": {
+        "min": 0.431,
+        "median": 1.972,
+        "max": 5.326
+      },
+      "length_mm": {
+        "min": 1.193,
+        "median": 3.467,
+        "max": 7.349
+      }
+    },
+    "scratch": {
+      "area_mm2": {
+        "min": 0.042,
+        "median": 0.347,
+        "max": 2.625
+      },
+      "length_mm": {
+        "min": 0.426,
+        "median": 3.114,
+        "max": 9.18
+      }
+    },
+    "contamination": {
+      "area_mm2": {
+        "min": 0.035,
+        "median": 1.674,
+        "max": 11.188
+      },
+      "length_mm": {
+        "min": 0.25,
+        "median": 1.817,
+        "max": 5.316
+      }
+    },
+    "chip": {
+      "area_mm2": {
+        "min": 0.139,
+        "median": 1.017,
+        "max": 3.549
+      },
+      "length_mm": {
+        "min": 0.531,
+        "median": 1.505,
+        "max": 2.685
+      }
+    },
+    "missing_pin": {
+      "area_mm2": {
+        "min": 0.243,
+        "median": 0.41,
+        "max": 0.903
+      },
+      "length_mm": {
+        "min": 1.0,
+        "median": 1.231,
+        "max": 1.489
+      }
+    }
+  },
   "graphs": [
-    "results/graphs/class_distribution.png",
-    "results/graphs/sample_wafer_maps.png",
-    "results/graphs/image_dimensions.png",
-    "results/graphs/pixel_intensity_histogram.png",
-    "results/graphs/defect_ratio_per_class.png",
-    "results/graphs/mean_defect_map_per_class.png"
+    "results/graphs/decision_distribution.png",
+    "results/graphs/defect_class_distribution.png",
+    "results/graphs/defect_size_distributions.png",
+    "results/graphs/sample_frames.png",
+    "results/graphs/defect_gallery.png"
   ]
 }
