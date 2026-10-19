@@ -1,0 +1,99 @@
+{
+ "defect_classes": [
+  "crack",
+  "scratch",
+  "contamination",
+  "chip",
+  "missing_pin"
+ ],
+ "det_imgsz": 416,
+ "seg_imgsz": 256,
+ "det_conf": 0.4,
+ "seg_conf": 0.1,
+ "min_pixels": 6,
+ "crop_pad": 0.08,
+ "px_per_mm": 12.0,
+ "rules": {
+  "crack": {
+   "metric": "count",
+   "description": "Any crack in the mould compound can propagate to the die -> scrap.",
+   "bands": [
+    {
+     "max": null,
+     "verdict": "SCRAP",
+     "reason": "crack in package body"
+    }
+   ]
+  },
+  "missing_pin": {
+   "metric": "count",
+   "description": "A missing lead cannot be soldered -> scrap.",
+   "bands": [
+    {
+     "max": null,
+     "verdict": "SCRAP",
+     "reason": "missing lead"
+    }
+   ]
+  },
+  "chip": {
+   "metric": "area_mm2",
+   "description": "Tiny edge chips are cosmetic; larger chips expose the package -> scrap.",
+   "bands": [
+    {
+     "max": 0.5,
+     "verdict": "PASS",
+     "reason": "chip within cosmetic tolerance"
+    },
+    {
+     "max": null,
+     "verdict": "SCRAP",
+     "reason": "edge chipping too large"
+    }
+   ]
+  },
+  "scratch": {
+   "metric": "length_mm",
+   "description": "Short scratches are cosmetic, medium ones can be buffed/re-marked, long ones scrap.",
+   "bands": [
+    {
+     "max": 1.5,
+     "verdict": "PASS",
+     "reason": "scratch within cosmetic tolerance"
+    },
+    {
+     "max": 4.0,
+     "verdict": "REWORK",
+     "reason": "scratch - buff and re-mark"
+    },
+    {
+     "max": null,
+     "verdict": "SCRAP",
+     "reason": "long scratch"
+    }
+   ]
+  },
+  "contamination": {
+   "metric": "area_mm2",
+   "description": "Small residue is cleanable; large contamination covers marking/leads -> scrap.",
+   "bands": [
+    {
+     "max": 0.5,
+     "verdict": "PASS",
+     "reason": "contamination within tolerance"
+    },
+    {
+     "max": 3.0,
+     "verdict": "REWORK",
+     "reason": "contamination - clean device"
+    },
+    {
+     "max": null,
+     "verdict": "SCRAP",
+     "reason": "heavy contamination"
+    }
+   ]
+  }
+ },
+ "note": "generated from src/qc/config.py, configs/quality_rules.yaml and results/reports/tuned_thresholds.json"
+}

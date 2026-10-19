@@ -176,11 +176,7 @@ def build_report(ev, eda) -> str:
 
 ML Project Report · generated {date.today().isoformat()} from the project's result files
 
-**Team:**
-- Balasudhan (RA2411003012164)
-- Kadhir Anand (RA2411003012146)
-- Sarvesh (RA2411003012165)
-- Reenu T R (RA2411003012132)
+**Author:** Balasudhan R (RA2411003012164)
 
 **Repository:** https://github.com/BALASUDHAN1807/WaferSense-AI
 
@@ -467,7 +463,7 @@ correct quality decision for {f(best_e['decision_accuracy'] * 100, 1)} % of the 
 
 Generative AI (Claude) assisted with designing the system, writing the code and synthetic data generator,
 and drafting this report. All experiments were executed by the project code and every reported number
-is inserted automatically from the generated result files. The team reviewed the code and results.
+is inserted automatically from the generated result files. The author reviewed the code and results.
 """
 
 

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semiconductor Device QC</title>
+<meta name="description" content="AI quality inspection of IC packages: YOLO11 detection, defect segmentation, PASS / REWORK / SCRAP.">
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #1c2230; --muted: #5d6677; --line: #dfe3ea;
+    --accent: #2f5fd0; --pass: #2e9e4f; --rework: #d98a00; --scrap: #d63c3c; --none: #7a8190;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: #141a26; color: #fff; padding: 22px 16px; }
+  header .wrap, main { max-width: 1180px; margin: 0 auto; }
+  header h1 { margin: 0; font-size: 1.45rem; font-weight: 650; letter-spacing: .2px; }
+  header p { margin: 4px 0 0; color: #b6bfd0; font-size: .92rem; }
+  main { padding: 18px 16px 48px; }
+  nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto; }
+  nav button { background: none; border: 0; padding: 10px 14px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  nav button.on { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .row > * { flex: 1 1 320px; min-width: 0; }
+  .drop { border: 2px dashed var(--line); border-radius: 10px; padding: 22px; text-align: center; color: var(--muted); cursor: pointer; }
+  .drop.over { border-color: var(--accent); background: #eef3ff; }
+  .samples { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; margin-top: 12px; }
+  .samples img { width: 100%; border-radius: 6px; cursor: pointer; border: 2px solid transparent; display: block; }
+  .samples img:hover { border-color: var(--accent); }
+  .imgs { display: flex; gap: 12px; flex-wrap: wrap; }
+  .imgs figure { flex: 1 1 300px; margin: 0; min-width: 0; }
+  .imgs img { width: 100%; border-radius: 8px; display: block; background: #222; image-rendering: auto; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+  .badge { display: inline-block; color: #fff; border-radius: 6px; padding: 1px 9px; font-weight: 650; font-size: .85rem; }
+  .badge.big { font-size: 1.15rem; padding: 3px 12px; }
+  .PASS { background: var(--pass); } .REWORK { background: var(--rework); } .SCRAP { background: var(--scrap); } .NO_DEVICE { background: var(--none); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  .tablewrap { overflow-x: auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .kpi b { display: block; font-size: 1.6rem; font-weight: 650; }
+  .kpi span { color: var(--muted); font-size: .85rem; }
+  .bars div { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .bars label { width: 110px; color: var(--muted); font-size: .9rem; }
+  .bars i { height: 16px; border-radius: 4px; background: var(--accent); display: block; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: #e8ecf4; color: var(--ink); }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .muted { color: var(--muted); }
+  .hidden { display: none; }
+  .err { color: var(--scrap); }
+  footer { color: var(--muted); font-size: .82rem; max-width: 1180px; margin: 0 auto; padding: 0 16px 28px; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>🔬 Semiconductor Device Quality Control</h1>
+  <p>Camera image → YOLO11 device detection → YOLO11-seg defect segmentation → measurement in mm → PASS / REWORK / SCRAP</p>
+</div></header>
+
+<main>
+  <nav>
+    <button data-tab="inspect" class="on">Inspect</button>
+    <button data-tab="conveyor">Conveyor simulation</button>
+    <button data-tab="analytics">Analytics</button>
+    <button data-tab="rules">Quality rules</button>
+    <button data-tab="about">About</button>
+  </nav>
+
+  <section id="tab-inspect">
+    <div class="panel">
+      <div id="drop" class="drop">Drop a camera image here or <u>click to choose</u> (PNG / JPG, max 4 MB)
+        <input id="file" type="file" accept="image/*" class="hidden"></div>
+      <div class="muted" style="margin-top:12px">…or click a sample frame from the held-out test set:</div>
+      <div id="samples" class="samples"></div>
+    </div>
+    <div id="status" class="muted"></div>
+    <div id="result" class="hidden">
+      <div class="panel">
+        <div id="summary" style="margin-bottom:12px"></div>
+        <div class="imgs">
+          <figure><img id="orig" alt="camera image"><figcaption>Camera image</figcaption></figure>
+          <figure><img id="anno" alt="inspection result"><figcaption>Inspection result (box colour = decision, coloured areas = defects)</figcaption></figure>
+        </div>
+      </div>
+      <div class="panel tablewrap"><table id="defects"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-conveyor" class="hidden">
+    <div class="panel">
+      <p style="margin-top:0">Feeds the sample frames through the system one after another, like a camera above a production line.</p>
+      <button id="run" class="btn">Start conveyor</button> <button id="stop" class="btn ghost">Stop</button>
+      <span id="convstat" class="muted" style="margin-left:10px"></span>
+    </div>
+    <div class="panel"><img id="convimg" style="width:100%;max-width:560px;border-radius:8px" alt=""><div id="convsum"></div></div>
+  </section>
+
+  <section id="tab-analytics" class="hidden">
+    <div class="kpis" id="kpis"></div>
+    <div class="row" style="margin-top:16px">
+      <div class="panel"><b>Decisions</b><div class="bars" id="bars-dec"></div></div>
+      <div class="panel"><b>Defects found by type</b><div class="bars" id="bars-def"></div></div>
+    </div>
+    <div class="panel tablewrap"><b>Recent inspections</b><table id="hist"></table></div>
+    <button id="clear" class="btn ghost">Clear history</button>
+    <p class="muted">History is stored in this browser (the hosted demo has no server-side database; the full local version stores every inspection in SQLite).</p>
+  </section>
+
+  <section id="tab-rules" class="hidden">
+    <div class="panel tablewrap"><table id="rules"></table></div>
+    <p class="muted">Each defect is judged on its own; a device gets the most severe verdict of its defects.</p>
+  </section>
+
+  <section id="tab-about" class="hidden">
+    <div class="panel">
+      <h3 style="margin-top:0">About this system</h3>
+      <p>An AI quality-inspection system for packaged ICs. A <b>YOLO11n</b> model finds every device in the camera frame; each device is cropped and a <b>YOLO11n-seg</b> model outlines five defect types (crack, scratch, contamination, chip, missing pin). Each defect is measured in millimetres (12 px/mm camera calibration) and quality rules decide PASS, REWORK or SCRAP.</p>
+      <p>The models were trained by the author on a synthetic dataset of 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set (307 devices) this deployment makes the correct decision for 87.9 % of devices.</p>
+      <p class="muted">Academic prototype trained on synthetic images — not a manufacturing quality-control decision. Source: <a href="https://github.com/BALASUDHAN1807/WaferSense-AI">github.com/BALASUDHAN1807/WaferSense-AI</a> · Author: Balasudhan R</p>
+    </div>
+  </section>
+</main>
+<footer>Semiconductor Device QC · YOLO11 + FastAPI on Vercel</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const DEC = ["PASS", "REWORK", "SCRAP"];
+const DEFECTS = ["crack", "scratch", "contamination", "chip", "missing_pin"];
+const badge = (d, big) => `<span class="badge ${d}${big ? " big" : ""}">${d.replace("_", " ")}</span>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+// ---------- tabs
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + b.dataset.tab));
+  if (b.dataset.tab === "analytics") renderAnalytics();
+});
+
+// ---------- history (browser storage, guarded)
+function loadHist() { try { return JSON.parse(localStorage.getItem("qc_history") || "[]"); } catch { return []; } }
+function saveHist(h) { try { localStorage.setItem("qc_history", JSON.stringify(h.slice(-300))); } catch {} }
+let history = loadHist();
+
+// ---------- API
+async function inspectBlob(blob, name) {
+  const fd = new FormData();
+  fd.append("file", blob, name);
+  const r = await fetch("/api/inspect", { method: "POST", body: fd });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.detail || `HTTP ${r.status}`);
+  const defects = {};
+  body.devices.forEach(d => d.defects.forEach(f => defects[f.cls] = (defects[f.cls] || 0) + 1));
+  history.push({ t: new Date().toISOString(), name, overall: body.overall, counts: body.counts,
+                 ms: body.timings_ms.total, defects });
+  saveHist(history);
+  return body;
+}
+
+function showResult(body, origSrc) {
+  $("#result").classList.remove("hidden");
+  $("#orig").src = origSrc;
+  $("#anno").src = "data:image/png;base64," + body.annotated_image_png_base64;
+  const c = body.counts;
+  $("#summary").innerHTML = `<b>Frame result:</b> ${badge(body.overall, true)} &nbsp; ${body.devices.length} device(s) · PASS ${c.PASS} · REWORK ${c.REWORK} · SCRAP ${c.SCRAP} · <span class="muted">${body.timings_ms.total.toFixed(0)} ms server time</span>`;
+  let rows = "<tr><th>Device</th><th>Decision</th><th>Defect</th><th>Area (mm²)</th><th>Length (mm)</th><th>Confidence</th><th>Verdict</th><th>Reason</th></tr>";
+  body.devices.forEach((d, i) => {
+    if (!d.defects.length) rows += `<tr><td>${i + 1}</td><td>${badge(d.decision)}</td><td colspan="6" class="muted">no defects found</td></tr>`;
+    d.defects.forEach(f => rows += `<tr><td>${i + 1}</td><td>${badge(d.decision)}</td><td>${esc(f.cls)}</td><td>${f.area_mm2.toFixed(2)}</td><td>${f.length_mm.toFixed(2)}</td><td>${(f.confidence * 100).toFixed(0)} %</td><td>${badge(f.verdict)}</td><td>${esc(f.reason)}</td></tr>`);
+  });
+  if (!body.devices.length) rows += `<tr><td colspan="8" class="muted">No IC device detected in this image.</td></tr>`;
+  $("#defects").innerHTML = rows;
+}
+
+async function inspectFile(blob, name, src) {
+  $("#status").textContent = "Inspecting…";
+  $("#status").className = "muted";
+  try {
+    const body = await inspectBlob(blob, name);
+    $("#status").textContent = "";
+    showResult(body, src);
+  } catch (e) {
+    $("#status").textContent = "Inspection failed: " + e.message + " (the first request after a pause can take a few seconds while the models load — try again)";
+    $("#status").className = "err";
+  }
+}
+
+// ---------- upload
+const drop = $("#drop"), file = $("#file");
+drop.onclick = () => file.click();
+file.onchange = () => file.files[0] && useFile(file.files[0]);
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); e.dataTransfer.files[0] && useFile(e.dataTransfer.files[0]); };
+function useFile(f) {
+  if (f.size > 4 * 1024 * 1024) { $("#status").textContent = "Image larger than 4 MB."; $("#status").className = "err"; return; }
+  inspectFile(f, f.name, URL.createObjectURL(f));
+}
+
+// ---------- samples
+let sampleNames = [];
+fetch("/api/samples").then(r => r.json()).then(names => {
+  sampleNames = names;
+  $("#samples").innerHTML = names.map(n => `<img src="/static/samples/${n}" alt="${n}" title="${n}" data-n="${n}">`).join("");
+  $("#samples").querySelectorAll("img").forEach(im => im.onclick = async () => {
+    const blob = await (await fetch(im.src)).blob();
+    inspectFile(blob, im.dataset.n, im.src);
+  });
+});
+
+// ---------- conveyor
+let running = false;
+$("#run").onclick = async () => {
+  if (running) return;
+  running = true; $("#run").disabled = true;
+  const tot = { PASS: 0, REWORK: 0, SCRAP: 0 };
+  for (let k = 0; k < sampleNames.length && running; k++) {
+    const n = sampleNames[k];
+    try {
+      const blob = await (await fetch(`/static/samples/${n}`)).blob();
+      const body = await inspectBlob(blob, n);
+      DEC.forEach(d => tot[d] += body.counts[d]);
+      $("#convimg").src = "data:image/png;base64," + body.annotated_image_png_base64;
+      const all = DEC.reduce((a, d) => a + tot[d], 0) || 1;
+      $("#convsum").innerHTML = `<p>${n}: ${badge(body.overall)}</p>` + DEC.map(d => `${badge(d)} ${tot[d]} (${Math.round(100 * tot[d] / all)} %)`).join(" &nbsp; ");
+      $("#convstat").textContent = `${k + 1} / ${sampleNames.length} frames`;
+    } catch (e) { $("#convstat").textContent = "Error: " + e.message; }
+    await new Promise(r => setTimeout(r, 600));
+  }
+  running = false; $("#run").disabled = false;
+};
+$("#stop").onclick = () => running = false;
+
+// ---------- analytics
+function bars(el, obj, colours) {
+  const max = Math.max(1, ...Object.values(obj));
+  el.innerHTML = Object.entries(obj).map(([k, v]) =>
+    `<div><label>${k.replace("_", " ")}</label><i style="width:${Math.max(2, 70 * v / max)}%;background:${colours ? `var(--${k.toLowerCase()})` : "var(--accent)"}"></i><span>${v}</span></div>`).join("");
+}
+function renderAnalytics() {
+  history = loadHist();
+  const dec = { PASS: 0, REWORK: 0, SCRAP: 0 }, def = Object.fromEntries(DEFECTS.map(d => [d, 0]));
+  let ms = 0;
+  history.forEach(h => { DEC.forEach(d => dec[d] += h.counts[d]); Object.entries(h.defects).forEach(([k, v]) => def[k] = (def[k] || 0) + v); ms += h.ms; });
+  const devs = DEC.reduce((a, d) => a + dec[d], 0);
+  const pct = v => devs ? (100 * v / devs).toFixed(1) + " %" : "–";
+  $("#kpis").innerHTML = [["Frames inspected", history.length], ["Devices", devs], ["Pass rate", pct(dec.PASS)],
+    ["Rework rate", pct(dec.REWORK)], ["Scrap rate", pct(dec.SCRAP)], ["Avg time / frame", history.length ? (ms / history.length).toFixed(0) + " ms" : "–"]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`).join("");
+  bars($("#bars-dec"), dec, true);
+  bars($("#bars-def"), def, false);
+  $("#hist").innerHTML = "<tr><th>Time</th><th>Image</th><th>Result</th><th>PASS</th><th>REWORK</th><th>SCRAP</th><th>ms</th></tr>" +
+    history.slice(-50).reverse().map(h => `<tr><td>${new Date(h.t).toLocaleTimeString()}</td><td>${esc(h.name)}</td><td>${badge(h.overall)}</td><td>${h.counts.PASS}</td><td>${h.counts.REWORK}</td><td>${h.counts.SCRAP}</td><td>${h.ms.toFixed(0)}</td></tr>`).join("");
+}
+$("#clear").onclick = () => { history = []; saveHist(history); renderAnalytics(); };
+
+// ---------- rules
+fetch("/api/rules").then(r => r.json()).then(rules => {
+  let rows = "<tr><th>Defect</th><th>Measured by</th><th>Range</th><th>Verdict</th><th>Reason</th></tr>";
+  Object.entries(rules).forEach(([cls, r]) => {
+    let lo = 0;
+    r.bands.forEach(b => {
+      const hi = b.max === null ? Infinity : b.max;
+      const rng = r.metric === "count" ? "any size" : (lo === 0 ? `< ${hi}` : (hi === Infinity ? `≥ ${lo}` : `${lo} – ${hi}`));
+      rows += `<tr><td>${cls.replace("_", " ")}</td><td>${r.metric.replace("_mm2", " (mm²)").replace("_mm", " (mm)")}</td><td>${rng}</td><td>${badge(b.verdict)}</td><td>${esc(b.reason)}</td></tr>`;
+      lo = hi;
+    });
+  });
+  $("#rules").innerHTML = rows;
+});
+</script>
+</body>
+</html>

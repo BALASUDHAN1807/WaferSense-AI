@@ -1,13 +1,9 @@
 # Computer Vision-Based Industrial Quality Control & Defect Detection System
 ## Application: Semiconductor Device (IC Package) Inspection
 
-ML Project Report · generated 2026-10-11 from the project's result files
+ML Project Report · generated 2026-10-19 from the project's result files
 
-**Team:**
-- Balasudhan (RA2411003012164)
-- Kadhir Anand (RA2411003012146)
-- Sarvesh (RA2411003012165)
-- Reenu T R (RA2411003012132)
+**Author:** Balasudhan R (RA2411003012164)
 
 **Repository:** https://github.com/BALASUDHAN1807/WaferSense-AI
 
@@ -341,4 +337,4 @@ correct quality decision for 88.6 % of the 307 unseen test devices.
 
 Generative AI (Claude) assisted with designing the system, writing the code and synthetic data generator,
 and drafting this report. All experiments were executed by the project code and every reported number
-is inserted automatically from the generated result files. The team reviewed the code and results.
+is inserted automatically from the generated result files. The author reviewed the code and results.
