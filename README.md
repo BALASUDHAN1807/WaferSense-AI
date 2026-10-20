@@ -13,6 +13,8 @@ Results are shown on a **Streamlit** dashboard, served by a **FastAPI** backend 
 
 **Author:** Balasudhan R (RA2411003012164)
 
+**Live demo:** https://semiconductor-qc.vercel.app (trained models served as ONNX by FastAPI on Vercel, see `deploy/vercel/`)
+
 ![Dashboard](results/graphs/dashboard_screenshot.png)
 
 ---
