@@ -1,6 +1,6 @@
 """Vercel deployment: FastAPI serving the trained ONNX models + the web dashboard.
 
-    GET  /                  web dashboard (public/index.html)
+    GET  /                  web dashboard (public/index.html, served by Vercel's CDN)
     GET  /api/health        model status
     POST /api/inspect       upload an image -> devices, defects, measurements, decisions,
                             annotated PNG (base64)
@@ -16,14 +16,11 @@ import io
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
 
 from qc_lite import CFG, LiteEngine, to_png_b64
 
 HERE = Path(__file__).resolve().parent
-PUBLIC = HERE / "public"
 MAX_BYTES = 4 * 1024 * 1024          # Vercel request body limit is 4.5 MB
 
 app = FastAPI(title="Semiconductor Device QC", version="1.0.0",
@@ -36,11 +33,6 @@ def engine() -> LiteEngine:
     if _engine is None:                # loaded once per warm function instance
         _engine = LiteEngine()
     return _engine
-
-
-@app.get("/")
-def index():
-    return FileResponse(PUBLIC / "index.html")
 
 
 @app.get("/api/health")
@@ -74,12 +66,10 @@ async def inspect(file: UploadFile = File(...)):
 
 @app.get("/api/samples")
 def samples():
-    return sorted(p.name for p in (PUBLIC / "samples").glob("*.png"))
+    return CFG["samples"]
 
 
 @app.get("/api/rules")
 def rules():
     return CFG["rules"]
 
-
-app.mount("/static", StaticFiles(directory=PUBLIC), name="static")

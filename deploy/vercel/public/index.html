@@ -204,7 +204,7 @@ function useFile(f) {
 let sampleNames = [];
 fetch("/api/samples").then(r => r.json()).then(names => {
   sampleNames = names;
-  $("#samples").innerHTML = names.map(n => `<img src="/static/samples/${n}" alt="${n}" title="${n}" data-n="${n}">`).join("");
+  $("#samples").innerHTML = names.map(n => `<img src="/samples/${n}" alt="${n}" title="${n}" data-n="${n}">`).join("");
   $("#samples").querySelectorAll("img").forEach(im => im.onclick = async () => {
     const blob = await (await fetch(im.src)).blob();
     inspectFile(blob, im.dataset.n, im.src);
@@ -220,7 +220,7 @@ $("#run").onclick = async () => {
   for (let k = 0; k < sampleNames.length && running; k++) {
     const n = sampleNames[k];
     try {
-      const blob = await (await fetch(`/static/samples/${n}`)).blob();
+      const blob = await (await fetch(`/samples/${n}`)).blob();
       const body = await inspectBlob(blob, n);
       DEC.forEach(d => tot[d] += body.counts[d]);
       $("#convimg").src = "data:image/png;base64," + body.annotated_image_png_base64;

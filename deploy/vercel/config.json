@@ -95,5 +95,19 @@
    ]
   }
  },
- "note": "generated from src/qc/config.py, configs/quality_rules.yaml and results/reports/tuned_thresholds.json"
+ "note": "generated from src/qc/config.py, configs/quality_rules.yaml and results/reports/tuned_thresholds.json",
+ "samples": [
+  "sample_00.png",
+  "sample_01.png",
+  "sample_02.png",
+  "sample_03.png",
+  "sample_04.png",
+  "sample_05.png",
+  "sample_06.png",
+  "sample_07.png",
+  "sample_08.png",
+  "sample_09.png",
+  "sample_10.png",
+  "sample_11.png"
+ ]
 }
