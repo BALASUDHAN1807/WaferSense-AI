@@ -4,6 +4,7 @@
     GET  /api/health        model status
     POST /api/inspect       upload an image -> devices, defects, measurements, decisions,
                             annotated PNG (base64)
+    GET  /api/selftest      inspect a built-in test frame and compare with the expected result
     GET  /api/samples       list of demo camera frames
     GET  /api/rules         quality rules in use
 
@@ -62,6 +63,15 @@ async def inspect(file: UploadFile = File(...)):
     result["annotated_image_png_base64"] = to_png_b64(annotated)
     result["filename"] = file.filename
     return result
+
+
+@app.get("/api/selftest")
+def selftest():
+    """Inspect a built-in test frame (3 devices: 2 PASS, 1 REWORK for contamination)."""
+    result, _ = engine().inspect(Image.open(HERE / "selftest.png"))
+    return {"expected": {"PASS": 2, "REWORK": 1, "SCRAP": 0}, "got": result["counts"],
+            "ok": result["counts"] == {"PASS": 2, "REWORK": 1, "SCRAP": 0},
+            "timings_ms": result["timings_ms"], "devices": result["devices"]}
 
 
 @app.get("/api/samples")
