@@ -1,0 +1,1046 @@
+{
+ "init": "synthetic",
+ "folds": [
+  {
+   "fold": 0,
+   "mask_mAP50": 0.20623391248391248,
+   "mask_mAP50_95": 0.08764487773487775,
+   "box_mAP50": 0.2355583333333333
+  },
+  {
+   "fold": 1,
+   "mask_mAP50": 0.6414583333333332,
+   "mask_mAP50_95": 0.34324999999999994,
+   "box_mAP50": 0.8283333333333334
+  },
+  {
+   "fold": 2,
+   "mask_mAP50": 0.44210140791476416,
+   "mask_mAP50_95": 0.22977212190397128,
+   "box_mAP50": 0.4183009028642591
+  },
+  {
+   "fold": 3,
+   "mask_mAP50": 0.5258035714285714,
+   "mask_mAP50_95": 0.22885625000000004,
+   "box_mAP50": 0.532875
+  },
+  {
+   "fold": 4,
+   "mask_mAP50": 0.2521724148394962,
+   "mask_mAP50_95": 0.11710359410583585,
+   "box_mAP50": 0.38834991861497486
+  }
+ ],
+ "epochs": 40,
+ "imgsz": 384,
+ "mean_mask_mAP50": 0.4135539280000155,
+ "std_mask_mAP50": 0.16393958683199747,
+ "training_time_seconds": 5652.4,
+ "oof": {
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/002.png": {
+   "label": "bent_lead",
+   "fold": 0,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.2161509394645691,
+     "pixels": 15676
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/005.png": {
+   "label": "bent_lead",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/004.png": {
+   "label": "cut_lead",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/009.png": {
+   "label": "cut_lead",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/000.png": {
+   "label": "damaged_case",
+   "fold": 0,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.255365788936615,
+     "pixels": 17746
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.12010885775089264,
+     "pixels": 14680
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/002.png": {
+   "label": "damaged_case",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/004.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/009.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/012.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/019.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/027.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/028.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/029.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/036.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/040.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/041.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/044.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/057.png": {
+   "label": "good",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/000.png": {
+   "label": "misplaced",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/003.png": {
+   "label": "misplaced",
+   "fold": 0,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/004.png": {
+   "label": "bent_lead",
+   "fold": 1,
+   "detections": [
+    {
+     "cls": "bent_lead",
+     "conf": 0.5971662998199463,
+     "pixels": 4927
+    },
+    {
+     "cls": "bent_lead",
+     "conf": 0.2352071851491928,
+     "pixels": 2084
+    },
+    {
+     "cls": "bent_lead",
+     "conf": 0.2058907449245453,
+     "pixels": 3611
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/006.png": {
+   "label": "bent_lead",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/007.png": {
+   "label": "cut_lead",
+   "fold": 1,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.6446496844291687,
+     "pixels": 12060
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/008.png": {
+   "label": "cut_lead",
+   "fold": 1,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.7991020083427429,
+     "pixels": 22285
+    },
+    {
+     "cls": "cut_lead",
+     "conf": 0.2231258749961853,
+     "pixels": 19988
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/003.png": {
+   "label": "damaged_case",
+   "fold": 1,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.13152271509170532,
+     "pixels": 17805
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/009.png": {
+   "label": "damaged_case",
+   "fold": 1,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.874495804309845,
+     "pixels": 39381
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.2512689530849457,
+     "pixels": 33359
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/000.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/005.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/017.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/025.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/031.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/034.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/037.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/042.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/043.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/048.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/052.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/054.png": {
+   "label": "good",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/001.png": {
+   "label": "misplaced",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/004.png": {
+   "label": "misplaced",
+   "fold": 1,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/000.png": {
+   "label": "bent_lead",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/009.png": {
+   "label": "bent_lead",
+   "fold": 2,
+   "detections": [
+    {
+     "cls": "bent_lead",
+     "conf": 0.14011560380458832,
+     "pixels": 11824
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/002.png": {
+   "label": "cut_lead",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/003.png": {
+   "label": "cut_lead",
+   "fold": 2,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.6384260654449463,
+     "pixels": 11272
+    },
+    {
+     "cls": "cut_lead",
+     "conf": 0.15751539170742035,
+     "pixels": 11387
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/005.png": {
+   "label": "damaged_case",
+   "fold": 2,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.23054321110248566,
+     "pixels": 23782
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.2166910469532013,
+     "pixels": 15374
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.1502380520105362,
+     "pixels": 11074
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.14540262520313263,
+     "pixels": 11030
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.13638649880886078,
+     "pixels": 28696
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.11201144754886627,
+     "pixels": 8230
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/008.png": {
+   "label": "damaged_case",
+   "fold": 2,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.18355774879455566,
+     "pixels": 44427
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.16528283059597015,
+     "pixels": 27749
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.16464777290821075,
+     "pixels": 32091
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.12437514215707779,
+     "pixels": 18289
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.11451832950115204,
+     "pixels": 49917
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/002.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/003.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/007.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/008.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/011.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/015.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/018.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/024.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/032.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/038.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/046.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/051.png": {
+   "label": "good",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/008.png": {
+   "label": "misplaced",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/009.png": {
+   "label": "misplaced",
+   "fold": 2,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/001.png": {
+   "label": "bent_lead",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "bent_lead",
+     "conf": 0.10926750302314758,
+     "pixels": 5632
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/007.png": {
+   "label": "bent_lead",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/000.png": {
+   "label": "cut_lead",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.8886758089065552,
+     "pixels": 12330
+    },
+    {
+     "cls": "cut_lead",
+     "conf": 0.10443569719791412,
+     "pixels": 18457
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/006.png": {
+   "label": "cut_lead",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.853679895401001,
+     "pixels": 18726
+    },
+    {
+     "cls": "cut_lead",
+     "conf": 0.1393549144268036,
+     "pixels": 15534
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/004.png": {
+   "label": "damaged_case",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.44966450333595276,
+     "pixels": 375665
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.3041765093803406,
+     "pixels": 35720
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.2910034954547882,
+     "pixels": 28440
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.25355467200279236,
+     "pixels": 339072
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.18922273814678192,
+     "pixels": 52814
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.1168411448597908,
+     "pixels": 57619
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.11311467736959457,
+     "pixels": 537111
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.11254189163446426,
+     "pixels": 474713
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.11187861859798431,
+     "pixels": 33326
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/006.png": {
+   "label": "damaged_case",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "damaged_case",
+     "conf": 0.3312850296497345,
+     "pixels": 29821
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.22555959224700928,
+     "pixels": 353949
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.20524191856384277,
+     "pixels": 330333
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.15715782344341278,
+     "pixels": 24347
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.1330139935016632,
+     "pixels": 14438
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.12519003450870514,
+     "pixels": 338359
+    },
+    {
+     "cls": "damaged_case",
+     "conf": 0.107636958360672,
+     "pixels": 8480
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/001.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/014.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/022.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/030.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/035.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/039.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/049.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/050.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/053.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.10445143282413483,
+     "pixels": 455551
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/055.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/056.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/059.png": {
+   "label": "good",
+   "fold": 3,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/005.png": {
+   "label": "misplaced",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.280237078666687,
+     "pixels": 621059
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.2719181478023529,
+     "pixels": 490068
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.21810312569141388,
+     "pixels": 441347
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.14720484614372253,
+     "pixels": 407654
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/007.png": {
+   "label": "misplaced",
+   "fold": 3,
+   "detections": [
+    {
+     "cls": "cut_lead",
+     "conf": 0.39505714178085327,
+     "pixels": 15098
+    },
+    {
+     "cls": "cut_lead",
+     "conf": 0.35256263613700867,
+     "pixels": 16142
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.2215578705072403,
+     "pixels": 561090
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/003.png": {
+   "label": "bent_lead",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.6383355259895325,
+     "pixels": 6311
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.5240398049354553,
+     "pixels": 3754
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.1579417884349823,
+     "pixels": 3205
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.1428333818912506,
+     "pixels": 7769
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/bent_lead/008.png": {
+   "label": "bent_lead",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.11429276317358017,
+     "pixels": 145
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/001.png": {
+   "label": "cut_lead",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.2368910014629364,
+     "pixels": 4743
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.16945138573646545,
+     "pixels": 5067
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.12524117529392242,
+     "pixels": 3673
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/cut_lead/005.png": {
+   "label": "cut_lead",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.20611518621444702,
+     "pixels": 2472
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/001.png": {
+   "label": "damaged_case",
+   "fold": 4,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/damaged_case/007.png": {
+   "label": "damaged_case",
+   "fold": 4,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/006.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.15694287419319153,
+     "pixels": 680
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/010.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.6187798380851746,
+     "pixels": 4771
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.6021075248718262,
+     "pixels": 3476
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.41422924399375916,
+     "pixels": 1
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.36302995681762695,
+     "pixels": 1831
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/013.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.5897944569587708,
+     "pixels": 7267
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.5807613134384155,
+     "pixels": 7528
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.26917344331741333,
+     "pixels": 7634
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.1976771354675293,
+     "pixels": 1538
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/016.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.436097115278244,
+     "pixels": 5385
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.3016088902950287,
+     "pixels": 5423
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.20388217270374298,
+     "pixels": 4602
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/020.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.12830130755901337,
+     "pixels": 101
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/021.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.43018510937690735,
+     "pixels": 2089
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.3928680717945099,
+     "pixels": 156
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.14962315559387207,
+     "pixels": 2248
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.14709734916687012,
+     "pixels": 1451
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/023.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.19145025312900543,
+     "pixels": 2218
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/026.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.11818569898605347,
+     "pixels": 114
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/033.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/045.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.2074190080165863,
+     "pixels": 3893
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.19085247814655304,
+     "pixels": 4665
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/047.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.4496155083179474,
+     "pixels": 67
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.3752174973487854,
+     "pixels": 3940
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.34962671995162964,
+     "pixels": 3739
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.170504629611969,
+     "pixels": 4808
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.1270795464515686,
+     "pixels": 232
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/good/058.png": {
+   "label": "good",
+   "fold": 4,
+   "detections": [
+    {
+     "cls": "misplaced",
+     "conf": 0.1868809014558792,
+     "pixels": 1507
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.16642242670059204,
+     "pixels": 7727
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.15466710925102234,
+     "pixels": 5997
+    },
+    {
+     "cls": "misplaced",
+     "conf": 0.12902739644050598,
+     "pixels": 39
+    }
+   ]
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/002.png": {
+   "label": "misplaced",
+   "fold": 4,
+   "detections": []
+  },
+  "/home/claude/wafersense-ai/dataset/real/transistor/test/misplaced/006.png": {
+   "label": "misplaced",
+   "fold": 4,
+   "detections": []
+  }
+ }
+}
