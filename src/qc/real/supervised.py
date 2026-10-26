@@ -24,7 +24,7 @@ from qc import config as C
 from qc.real.mvtec import DEFECT_TYPES, load_samples
 
 IMGSZ = 384
-EPOCHS = 60
+EPOCHS = 40
 N_FOLDS = 5
 N_GOOD_TRAIN = 60            # defect-free MVTec train images added per fold as negatives
 WORK = C.DATASET_DIR / "real" / "yolo_cv"
@@ -98,7 +98,7 @@ def run_cv(init: str = "synthetic", epochs: int = EPOCHS) -> dict:
     for f in range(N_FOLDS):
         d, val = build_fold(samples, test, fold_of, f)
         model = YOLO(init_weights(init))
-        model.train(data=str(d / "data.yaml"), imgsz=IMGSZ, epochs=epochs, batch=8, patience=20,
+        model.train(data=str(d / "data.yaml"), imgsz=IMGSZ, epochs=epochs, batch=8, patience=15,
                     device=C.DEVICE, workers=2, seed=C.SEED, deterministic=True, project=str(C.RUNS_DIR),
                     name=f"real_{init}_fold{f}", exist_ok=True, verbose=False, plots=False,
                     degrees=10, fliplr=0.5, mosaic=0.5)

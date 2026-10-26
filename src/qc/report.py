@@ -124,13 +124,36 @@ def readme_block(ev) -> str:
     return "\n".join(lines)
 
 
-def update_readme(ev) -> None:
+def readme_real_block(real: dict) -> str:
+    pc, h = real["patchcore"], real["patchcore"]["heldout"]
+    lines = ["### Real images — MVTec AD *transistor* (real photographs, 4 real defect types)", "",
+             "| Stage | Metric | Value |", "|---|---|---|",
+             f"| PatchCore anomaly detection (no defect labels) | image AUROC, all 100 test images | {f(pc['image_AUROC_all_test'])} |",
+             f"| | pixel AUROC (localisation) | {f(pc['pixel_AUROC_all_test'])} |",
+             f"| | held-out accuracy / defect recall / false-reject rate | {pct(h['accuracy'])} / {pct(h['defect_recall'])} / {pct(h['false_reject_rate'])} |"]
+    for k, v in (real.get("supervised") or {}).items():
+        lines.append(f"| YOLO11n-seg, {INIT_NAMES.get(k, k)} (5-fold CV) | mask mAP50 / defect-type acc. / "
+                     f"PASS-REWORK-SCRAP acc. | {f(v['mean_mask_mAP50'])} / {pct(v['defect_type_accuracy_oof'])} / "
+                     f"{pct(v['combined_decision_accuracy_heldout'])} |")
+    lines += ["", "![PatchCore heat-maps on real transistors](results/graphs/real_patchcore_heatmaps.png)", "",
+              "Reproduce: put the MVTec `transistor` folder (or archive) in `dataset/real/`, then "
+              "`python run_project.py real-eval`. Details: report Section 12."]
+    return "\n".join(lines)
+
+
+def update_readme(ev, real: dict | None = None) -> None:
     if not README.exists():
         return
     text = README.read_text(encoding="utf-8")
     block = f"<!-- RESULTS:START -->\n{readme_block(ev)}\n<!-- RESULTS:END -->"
-    README.write_text(re.sub(r"<!-- RESULTS:START -->.*?<!-- RESULTS:END -->", lambda m: block, text,
-                             flags=re.S), encoding="utf-8")
+    text = re.sub(r"<!-- RESULTS:START -->.*?<!-- RESULTS:END -->", lambda m: block, text, flags=re.S)
+    if real:
+        rblock = f"<!-- REAL:START -->\n{readme_real_block(real)}\n<!-- REAL:END -->"
+        if "<!-- REAL:START -->" in text:
+            text = re.sub(r"<!-- REAL:START -->.*?<!-- REAL:END -->", lambda m: rblock, text, flags=re.S)
+        else:
+            text = text.replace("<!-- RESULTS:END -->", "<!-- RESULTS:END -->\n\n" + rblock, 1)
+    README.write_text(text, encoding="utf-8")
 
 
 def build_report(ev, eda) -> str:
@@ -467,14 +490,114 @@ is inserted automatically from the generated result files. The author reviewed t
 """
 
 
+INIT_NAMES = {"synthetic": "pretrained on our synthetic IC data", "coco": "pretrained on COCO (generic)"}
+
+
+def real_section(real: dict) -> str:
+    """'Validation on real images' section, built from results/reports/real_evaluation.json."""
+    pc = real["patchcore"]
+    h = pc["heldout"]
+    out = [f"""## 12. Validation on Real Images (MVTec AD — transistor)
+
+To check the approach beyond synthetic data, the system was tested on **real photographs** from the public
+**MVTec AD** dataset (Bergmann et al., CVPR 2019), category *transistor*: through-hole transistors
+photographed from above, with pixel-accurate masks for four real defect types — **bent lead, cut lead,
+damaged case, misplaced** (transistor shifted, rotated or missing).
+
+| Split | Images |
+|---|---|
+| Defect-free training images (MVTec `train/good`) | {pc['train_good_images']} |
+| MVTec test images (60 good + 40 defective, 10 per type) | {pc['test_images']} |
+| — calibration split (threshold choice only) | {pc['calibration_images']} |
+| — held-out split (reported results) | {pc['heldout_images']} |
+
+### 12.1 Anomaly detection without defect labels (PatchCore)
+PatchCore (Roth et al., CVPR 2022) stores the mid-level features of every patch of the **defect-free**
+images (ImageNet-pretrained YOLO11s-cls backbone, stride-8 + stride-16 features, 1 % greedy coreset);
+a test patch far from all stored patches is anomalous. This mirrors a real factory, where good parts are
+plentiful and defects are rare and unlabelled.
+
+| Metric | Value |
+|---|---|
+| Image AUROC (all 100 test images) | **{f(pc['image_AUROC_all_test'])}** |
+| Image AUROC (held-out 60) | {f(pc['image_AUROC_heldout'])} |
+| Pixel AUROC (defect localisation, all test images) | {f(pc['pixel_AUROC_all_test'])} |
+| Held-out accuracy (good vs defective, threshold from calibration split) | **{pct(h['accuracy'])}** |
+| Held-out defect recall | {pct(h['defect_recall'])} ({h['escapes']} escapes) |
+| Held-out false-reject rate (good parts flagged) | {pct(h['false_reject_rate'])} |
+
+Recall per defect type (held-out): {', '.join(f"{t.replace('_', ' ')} {pct(v)}" for t, v in pc['per_type_recall_heldout'].items())}.
+
+![PatchCore heat-maps on real transistors](../results/graphs/real_patchcore_heatmaps.png)
+"""]
+    sup = real.get("supervised")
+    if sup:
+        rows = "\n".join(
+            f"| YOLO11n-seg {INIT_NAMES.get(k, k)} | {f(v['mean_mask_mAP50'])} ± {f(v['std_mask_mAP50'])} | "
+            f"{pct(v['defect_type_accuracy_oof'])} | {pct(v['combined_decision_accuracy_heldout'])} | "
+            f"{f(v['combined_decision_macro_f1_heldout'])} |" for k, v in sup.items())
+        best = max(sup, key=lambda k: sup[k]["combined_decision_macro_f1_heldout"])
+        cm = sup[best]["combined_confusion_matrix"]
+        cm_md = "\n".join(f"| **{l}** | " + " | ".join(str(x) for x in r) + " |"
+                          for l, r in zip(cm["labels"], cm["matrix"]))
+        out.append(f"""
+### 12.2 Defect type with supervised YOLO11-seg (5-fold cross-validation)
+MVTec provides only 40 defective transistor images, so YOLO11n-seg (384 px) was trained with
+**stratified 5-fold cross-validation**: each image is predicted by a model that never saw it
+("out-of-fold"). 60 defect-free training images are added to every fold as negatives. Two starting
+points were compared — the model pretrained on **our synthetic IC data** (transfer from simulation to
+real) and the generic **COCO** model.
+
+### 12.3 Combined real-image inspection
+PatchCore decides *defect or not*; if a defect is found, the type predicted by YOLO11-seg chooses the
+verdict (`configs/transistor_rules.yaml`: bent lead / misplaced → REWORK, cut lead / damaged case →
+SCRAP). Ground truth: good → PASS, and the same mapping for the defect types.
+
+| Model | Mask mAP50 (5 folds) | Defect-type accuracy | Combined PASS/REWORK/SCRAP accuracy (held-out) | Macro F1 |
+|---|---|---|---|---|
+{rows}
+
+Confusion matrix of the combined system with the {INIT_NAMES.get(best, best)} model (held-out split, rows = truth):
+
+| True \\ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+{cm_md}
+""")
+    out.append("""
+**What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
+on real photographs, not only on the synthetic images. The numbers are lower than on synthetic data
+because real defects are subtler and only 40 labelled defect images exist — exactly the situation a new
+production line faces, which is why the label-free anomaly detector is valuable as the first stage.
+""")
+    return "\n".join(out)
+
+
+def _insert_real(report: str, real: dict) -> str:
+    """Insert the real-image section before the Discussion and renumber the following sections."""
+    head, tail = report.split("## 12. Discussion", 1)
+    tail = "## 12. Discussion" + tail
+    for n in range(17, 11, -1):
+        tail = tail.replace(f"## {n}. ", f"## {n + 1}. ")
+    tail = tail.replace("- The images are synthetic. Real IC images",
+                        "- The main dataset is synthetic; real-image validation (Section 12) uses only the 100 MVTec "
+                        "transistor test images, so its numbers have wide uncertainty. Real IC images")
+    tail = tail.replace("- Fine-tune on a real dataset (e.g. MVTec AD, or images captured on the target line) using the same\n  label formats.",
+                        "- Collect more real defect images (MVTec has 10 per type) and fine-tune the full IC pipeline on\n  images captured on the target line.")
+    return head + real_section(real) + "\n" + tail
+
+
 def main() -> int:
     ev, eda = _j("evaluation.json"), _j("eda_summary.json")
     if not (ev and eda):
         print("Missing results - run: python run_project.py eda and python run_project.py evaluate")
         return 1
     REPORT.parent.mkdir(exist_ok=True)
-    REPORT.write_text(build_report(ev, eda), encoding="utf-8")
-    update_readme(ev)
+    report = build_report(ev, eda)
+    real = _j("real_evaluation.json")
+    if real:
+        report = _insert_real(report, real)
+    REPORT.write_text(report, encoding="utf-8")
+    update_readme(ev, real)
     print(f"Wrote {REPORT.relative_to(C.ROOT)} and updated the README results block.")
     return 0
 

@@ -1,0 +1,27 @@
+{
+  "dataset": "MVTec AD - transistor (real photographs)",
+  "patchcore": {
+    "train_good_images": 213,
+    "test_images": 100,
+    "calibration_images": 40,
+    "heldout_images": 60,
+    "image_AUROC_all_test": 0.9479166666666666,
+    "image_AUROC_heldout": 0.9224537037037037,
+    "pixel_AUROC_all_test": 0.8415578013617774,
+    "threshold": 5.6490983963012695,
+    "heldout": {
+      "n": 60,
+      "accuracy": 0.85,
+      "defect_recall": 0.8333333333333334,
+      "false_reject_rate": 0.1388888888888889,
+      "escapes": 4
+    },
+    "per_type_recall_heldout": {
+      "bent_lead": 1.0,
+      "cut_lead": 0.6666666666666666,
+      "damaged_case": 0.8333333333333334,
+      "misplaced": 0.8333333333333334
+    },
+    "heatmaps": "results/graphs/real_patchcore_heatmaps.png"
+  }
+}

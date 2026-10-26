@@ -1,7 +1,7 @@
 # Computer Vision-Based Industrial Quality Control & Defect Detection System
 ## Application: Semiconductor Device (IC Package) Inspection
 
-ML Project Report · generated 2026-10-19 from the project's result files
+ML Project Report · generated 2026-10-26 from the project's result files
 
 **Author:** Balasudhan R (RA2411003012164)
 
@@ -276,7 +276,46 @@ Selection criterion: highest end-to-end decision macro F1 on the test split (tie
 
 ![Dashboard](../results/graphs/dashboard_screenshot.png)
 
-## 12. Discussion
+## 12. Validation on Real Images (MVTec AD — transistor)
+
+To check the approach beyond synthetic data, the system was tested on **real photographs** from the public
+**MVTec AD** dataset (Bergmann et al., CVPR 2019), category *transistor*: through-hole transistors
+photographed from above, with pixel-accurate masks for four real defect types — **bent lead, cut lead,
+damaged case, misplaced** (transistor shifted, rotated or missing).
+
+| Split | Images |
+|---|---|
+| Defect-free training images (MVTec `train/good`) | 213 |
+| MVTec test images (60 good + 40 defective, 10 per type) | 100 |
+| — calibration split (threshold choice only) | 40 |
+| — held-out split (reported results) | 60 |
+
+### 12.1 Anomaly detection without defect labels (PatchCore)
+PatchCore (Roth et al., CVPR 2022) stores the mid-level features of every patch of the **defect-free**
+images (ImageNet-pretrained YOLO11s-cls backbone, stride-8 + stride-16 features, 1 % greedy coreset);
+a test patch far from all stored patches is anomalous. This mirrors a real factory, where good parts are
+plentiful and defects are rare and unlabelled.
+
+| Metric | Value |
+|---|---|
+| Image AUROC (all 100 test images) | **0.948** |
+| Image AUROC (held-out 60) | 0.922 |
+| Pixel AUROC (defect localisation, all test images) | 0.842 |
+| Held-out accuracy (good vs defective, threshold from calibration split) | **85.0 %** |
+| Held-out defect recall | 83.3 % (4 escapes) |
+| Held-out false-reject rate (good parts flagged) | 13.9 % |
+
+Recall per defect type (held-out): bent lead 100.0 %, cut lead 66.7 %, damaged case 83.3 %, misplaced 83.3 %.
+
+![PatchCore heat-maps on real transistors](../results/graphs/real_patchcore_heatmaps.png)
+
+
+**What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
+on real photographs, not only on the synthetic images. The numbers are lower than on synthetic data
+because real defects are subtler and only 40 labelled defect images exist — exactly the situation a new
+production line faces, which is why the label-free anomaly detector is valuable as the first stage.
+
+## 13. Discussion
 
 - **Detection is essentially solved** on this data (mAP50 0.995): ICs are high-contrast,
   rigid objects. The difficulty of the task lies in the *defects*.
@@ -297,24 +336,24 @@ Selection criterion: highest end-to-end decision macro F1 on the test split (tie
   5.0 %; the false-scrap rate (good device scrapped) is 9.1 %.
   In production the rule limits can be tightened to trade more false scrap for fewer escapes.
 
-## 13. Limitations
+## 14. Limitations
 
-- The images are synthetic. Real IC images have more varied lighting, reflections on leads, dust, real
+- The main dataset is synthetic; real-image validation (Section 12) uses only the 100 MVTec transistor test images, so its numbers have wide uncertainty. Real IC images have more varied lighting, reflections on leads, dust, real
   marking fonts and subtler defects; the models would need fine-tuning on real labelled images.
 - One camera view (top). Bent leads, coplanarity and package warpage need side views or 3-D sensing.
 - Measurements assume a calibrated, perpendicular camera (12 px/mm).
 - CPU-only training with a limited number of epochs; a GPU would allow larger models and longer training.
 - The prototype has not been validated on a real production line.
 
-## 14. Future Work
+## 15. Future Work
 
-- Fine-tune on a real dataset (e.g. MVTec AD, or images captured on the target line) using the same
-  label formats.
+- Collect more real defect images (MVTec has 10 per type) and fine-tune the full IC pipeline on
+  images captured on the target line.
 - Add bent-lead and marking-quality (OCR) checks; add side cameras.
 - Learn the PASS/REWORK/SCRAP decision from operator decisions instead of fixed rules.
 - Export models to ONNX/TensorRT for edge deployment at line speed; PostgreSQL for multi-line data.
 
-## 15. Conclusion
+## 16. Conclusion
 
 The project delivers a complete, working computer-vision quality-control system for semiconductor
 devices: data generation with exact labels, a YOLO11 detector, two compared defect segmenters,
@@ -322,7 +361,7 @@ measurement in millimetres, configurable PASS/REWORK/SCRAP rules, and a usable a
 (CLI, camera mode, FastAPI, Streamlit, SQLite). The selected pipeline (YOLO11n + YOLO11n-seg) makes the
 correct quality decision for 88.6 % of the 307 unseen test devices.
 
-## 16. References
+## 17. References
 
 1. Jocher, G., Qiu, J. *Ultralytics YOLO11*, 2024. https://github.com/ultralytics/ultralytics
 2. Ronneberger, O., Fischer, P., Brox, T. "U-Net: Convolutional Networks for Biomedical Image
@@ -333,7 +372,7 @@ correct quality decision for 88.6 % of the 307 unseen test devices.
 5. Paszke, A. et al. "PyTorch: An Imperative Style, High-Performance Deep Learning Library." NeurIPS, 2019.
 6. FastAPI, Streamlit, OpenCV and SQLite documentation.
 
-## 17. Use of Generative AI
+## 18. Use of Generative AI
 
 Generative AI (Claude) assisted with designing the system, writing the code and synthetic data generator,
 and drafting this report. All experiments were executed by the project code and every reported number
