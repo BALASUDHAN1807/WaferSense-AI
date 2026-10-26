@@ -1,0 +1,65 @@
+{
+  "patchcore": {
+    "img_size": 256,
+    "threshold": 5.6490983963012695,
+    "blur_sigma": 4
+  },
+  "seg": {
+    "img_size": 384,
+    "classes": [
+      "bent_lead",
+      "cut_lead",
+      "damaged_case",
+      "misplaced"
+    ],
+    "conf": 0.1
+  },
+  "rules": {
+    "bent_lead": {
+      "verdict": "REWORK",
+      "reason": "bent lead - re-form the lead"
+    },
+    "misplaced": {
+      "verdict": "REWORK",
+      "reason": "misplaced part - re-seat the transistor"
+    },
+    "cut_lead": {
+      "verdict": "SCRAP",
+      "reason": "cut lead - cannot be soldered"
+    },
+    "damaged_case": {
+      "verdict": "SCRAP",
+      "reason": "damaged package"
+    },
+    "unknown": {
+      "verdict": "SCRAP",
+      "reason": "anomaly of unknown type - hold for review"
+    }
+  },
+  "samples": [
+    {
+      "file": "real/good_021.jpg",
+      "label": "good"
+    },
+    {
+      "file": "real/good_012.jpg",
+      "label": "good"
+    },
+    {
+      "file": "real/bent_lead_003.jpg",
+      "label": "bent_lead"
+    },
+    {
+      "file": "real/cut_lead_005.jpg",
+      "label": "cut_lead"
+    },
+    {
+      "file": "real/damaged_case_007.jpg",
+      "label": "damaged_case"
+    },
+    {
+      "file": "real/misplaced_002.jpg",
+      "label": "misplaced"
+    }
+  ]
+}

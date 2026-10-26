@@ -126,7 +126,7 @@ class RealEngine:
         base = np.asarray(img.resize((size, size), Image.BILINEAR), np.float32)
         a = np.asarray(Image.fromarray(amap.astype(np.float32)).resize((size, size), Image.BILINEAR))
         thr = result["threshold"]
-        norm = np.clip((a - 0.6 * thr) / (0.9 * thr), 0, 1)               # fixed scale: comparable across images
+        norm = np.clip((a - 0.7 * thr) / (0.4 * thr), 0, 1)               # fixed scale: comparable across images
         heat = (0.55 * base + 0.45 * _jet(norm)).astype(np.uint8)
         im = Image.fromarray(heat)
         d = ImageDraw.Draw(im)
