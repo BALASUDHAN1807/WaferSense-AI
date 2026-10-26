@@ -17,6 +17,7 @@ Put the archive (or the extracted `transistor` folder) in dataset/real/.
 from __future__ import annotations
 
 import tarfile
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -41,25 +42,47 @@ class Sample:
         return self.label != "good"
 
 
+def _search(base: Path) -> Path | None:
+    """Find a folder that looks like MVTec's transistor category anywhere below `base`."""
+    for train_good in sorted(base.rglob("train/good")):
+        root = train_good.parent.parent
+        if (root / "test").exists() and (root / "ground_truth").exists():
+            return root
+    return None
+
+
+def _safe_members(names):
+    for n in names:
+        if n.startswith(("/", "\\")) or ".." in Path(n).parts:
+            raise ValueError(f"unsafe path in archive: {n}")
+
+
 def find_root(base: Path = REAL_DIR) -> Path:
-    """Return the extracted `transistor` folder, extracting the .tar.xz if needed."""
-    for cand in (base / CATEGORY, base / "mvtec_anomaly_detection" / CATEGORY):
-        if (cand / "train" / "good").exists():
-            return cand
-    archives = sorted(base.glob(f"{CATEGORY}*.tar*")) + sorted(base.glob("mvtec_anomaly_detection*.tar*"))
-    if archives:
-        print(f"Extracting {archives[0].name} ...")
-        with tarfile.open(archives[0]) as tf:
-            members = [m for m in tf.getmembers() if f"{CATEGORY}/" in m.name or m.name == CATEGORY]
-            for m in members:   # refuse absolute paths / path traversal
-                if m.name.startswith("/") or ".." in Path(m.name).parts:
-                    raise ValueError(f"unsafe path in archive: {m.name}")
-            tf.extractall(base, members=members)
-        return find_root(base)
+    """Return the transistor folder (MVTec layout), extracting a .tar.xz / .zip in `base` if needed.
+    Works with the official MVTec archive and with Kaggle / mirror zips of the same files."""
+    base.mkdir(parents=True, exist_ok=True)
+    root = _search(base)
+    if root:
+        return root
+    archives = sorted(base.glob("*.tar*")) + sorted(base.glob("*.zip"))
+    for arc in archives:
+        print(f"Extracting {arc.name} ...")
+        dest = base / arc.name.split(".")[0]
+        if zipfile.is_zipfile(arc):
+            with zipfile.ZipFile(arc) as zf:
+                _safe_members(zf.namelist())
+                zf.extractall(dest)
+        else:
+            with tarfile.open(arc) as tf:
+                _safe_members([m.name for m in tf.getmembers()])
+                tf.extractall(dest)
+        root = _search(base)
+        if root:
+            return root
     raise FileNotFoundError(
         f"MVTec AD '{CATEGORY}' not found in {base}.\n"
-        "Download transistor.tar.xz from https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads "
-        "and put it in dataset/real/")
+        "Put transistor.tar.xz (MVTec) or the Kaggle zip of the MVTec transistor category in dataset/real/ "
+        "(it must contain train/good, test/<type> and ground_truth/<type>).")
 
 
 def load_samples(root: Path | None = None) -> list[Sample]:
