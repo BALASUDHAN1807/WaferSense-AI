@@ -11,7 +11,7 @@ to semiconductor devices.
     transistor/ground_truth/<type>/*_mask.png   pixel masks of every defect
 
 Download (free for non-commercial / academic use, CC BY-NC-SA 4.0):
-    https://www.mvtec.com/company/research/datasets/mvtec-ad/downloads  -> transistor.tar.xz
+    https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads  -> transistor.tar.xz
 Put the archive (or the extracted `transistor` folder) in dataset/real/.
 """
 from __future__ import annotations
@@ -58,7 +58,7 @@ def find_root(base: Path = REAL_DIR) -> Path:
         return find_root(base)
     raise FileNotFoundError(
         f"MVTec AD '{CATEGORY}' not found in {base}.\n"
-        "Download transistor.tar.xz from https://www.mvtec.com/company/research/datasets/mvtec-ad/downloads "
+        "Download transistor.tar.xz from https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads "
         "and put it in dataset/real/")
 
 
