@@ -36,7 +36,7 @@ def _save(obj, name):
 def eval_detector() -> dict:
     from ultralytics import YOLO
     m = YOLO(str(C.DETECTOR_WEIGHTS)).val(data=str(C.SCENE_DIR / "data.yaml"), split="test",
-                                          imgsz=C.DETECTOR["imgsz"], device="cpu", verbose=False, plots=False,
+                                          imgsz=C.DETECTOR["imgsz"], device=C.DEVICE, verbose=False, plots=False,
                                           project=str(C.RUNS_DIR), name="eval_detector", exist_ok=True)
     out = {"precision": float(m.box.mp), "recall": float(m.box.mr), "mAP50": float(m.box.map50),
            "mAP50_95": float(m.box.map), "test_images": C.N_SCENES["test"]}
@@ -47,7 +47,7 @@ def eval_detector() -> dict:
 def eval_yolo_seg() -> dict:
     from ultralytics import YOLO
     m = YOLO(str(C.YOLO_SEG_WEIGHTS)).val(data=str(C.DEFECT_DIR / "data.yaml"), split="test",
-                                          imgsz=C.YOLO_SEG["imgsz"], device="cpu", verbose=False, plots=False,
+                                          imgsz=C.YOLO_SEG["imgsz"], device=C.DEVICE, verbose=False, plots=False,
                                           project=str(C.RUNS_DIR), name="eval_yolo_seg", exist_ok=True)
     per_class = {}
     for i, c in enumerate(m.seg.ap_class_index):
@@ -306,6 +306,8 @@ def main(argv=None) -> int:
     results = {"detector": eval_detector()}
     print("Detector:", json.dumps(results["detector"], indent=1))
     segs = [s for s, w in (("yolo", C.YOLO_SEG_WEIGHTS), ("unet", C.UNET_WEIGHTS)) if w.exists()]
+    if C.PROFILE == "large":          # the large profile only retrains the YOLO segmenter
+        segs = [s for s in segs if s == "yolo"]
     if not segs:
         print("No segmentation model trained yet.")
         return 1

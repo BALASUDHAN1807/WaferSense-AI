@@ -34,3 +34,8 @@ results/conveyor_demo.mp4
 # Tool caches
 .streamlit/secrets.toml
 .gradio/
+
+# Large-profile crops and real MVTec data (regenerate / download; not committed)
+dataset/defects_384/
+dataset/real/
+results/large/runs/

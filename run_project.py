@@ -13,11 +13,14 @@
     python run_project.py api                 FastAPI backend   -> http://127.0.0.1:8000/docs
     python run_project.py dashboard           Streamlit dashboard -> http://localhost:8501
     python run_project.py serve               API + dashboard together
+    python run_project.py real-eval           REAL images: MVTec AD transistor (PatchCore + YOLO11-seg CV)
     python run_project.py report              regenerate report/Project_Report.md and README results
     python run_project.py test                pytest suite
     python run_project.py all                 generate -> validate -> eda -> train-all -> evaluate -> report
 
 Extra arguments after the command are passed through (e.g. --epochs 5).
+Set QC_PROFILE=large (and QC_DEVICE=0 on a GPU) for YOLO11s-seg / 384 px / 100 epochs,
+see notebooks/train_large_on_colab.ipynb.
 """
 from __future__ import annotations
 
@@ -110,6 +113,11 @@ def cmd_serve(a):
         api.terminate()
 
 
+def cmd_real_eval(a):
+    from qc.real.evaluate_real import main
+    return main(a)
+
+
 def cmd_report(a):
     from qc.report import main
     return main()
@@ -137,7 +145,7 @@ COMMANDS = {
     "generate": cmd_generate, "validate": cmd_validate, "eda": cmd_eda,
     "train-detector": _train("detector"), "train-yoloseg": _train("yolo-seg"), "train-unet": _train("unet"),
     "train-all": _train("all"), "evaluate": cmd_evaluate, "inspect": cmd_inspect, "camera": cmd_camera,
-    "api": cmd_api, "dashboard": cmd_dashboard, "serve": cmd_serve, "report": cmd_report,
+    "api": cmd_api, "dashboard": cmd_dashboard, "serve": cmd_serve, "report": cmd_report, "real-eval": cmd_real_eval,
     "test": cmd_test, "all": cmd_all,
 }
 

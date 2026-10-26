@@ -1,0 +1,8 @@
+# Quality rules for the REAL MVTec AD transistor images.
+# The anomaly detector decides "defect or not"; the defect type found by the
+# segmentation model decides REWORK or SCRAP.
+bent_lead: {verdict: REWORK, reason: "bent lead - re-form the lead"}
+misplaced: {verdict: REWORK, reason: "misplaced part - re-seat the transistor"}
+cut_lead: {verdict: SCRAP, reason: "cut lead - cannot be soldered"}
+damaged_case: {verdict: SCRAP, reason: "damaged package"}
+unknown: {verdict: SCRAP, reason: "anomaly of unknown type - hold for review"}

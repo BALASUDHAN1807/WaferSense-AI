@@ -121,7 +121,7 @@ class InspectionEngine:
 
     # --------------------------------------------------------- stages
     def detect(self, image):
-        r = self.detector.predict(image, imgsz=C.DETECTOR["imgsz"], conf=self.det_conf, device="cpu",
+        r = self.detector.predict(image, imgsz=C.DETECTOR["imgsz"], conf=self.det_conf, device=C.DEVICE,
                                   verbose=False)[0]
         return [(b.tolist(), float(c)) for b, c in zip(r.boxes.xyxy.numpy(), r.boxes.conf.numpy())]
 
@@ -129,7 +129,7 @@ class InspectionEngine:
         """Defects in one 256x256 crop -> [(class, confidence, bool mask), ...]."""
         out = []
         if self.segmenter == "yolo":
-            r = self.seg_model.predict(crop, imgsz=C.YOLO_SEG["imgsz"], conf=self.seg_conf, device="cpu",
+            r = self.seg_model.predict(crop, imgsz=C.YOLO_SEG["imgsz"], conf=self.seg_conf, device=C.DEVICE,
                                        retina_masks=True, verbose=False)[0]
             if r.masks is not None:
                 for m, c, p in zip(r.masks.data.numpy(), r.boxes.cls.numpy(), r.boxes.conf.numpy()):

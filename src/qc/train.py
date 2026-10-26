@@ -51,7 +51,7 @@ def _train_yolo(kind: str, cfg: dict, data_yaml, out_weights, epochs=None, extra
     model = YOLO(str(pretrained(cfg["base"])))
     t0 = time.perf_counter()
     model.train(data=str(data_yaml), imgsz=cfg["imgsz"], epochs=epochs or cfg["epochs"],
-                batch=cfg["batch"], patience=cfg["patience"], device="cpu", workers=2,
+                batch=cfg["batch"], patience=cfg["patience"], device=C.DEVICE, workers=2,
                 seed=C.SEED, deterministic=True, project=str(C.RUNS_DIR), name=kind, exist_ok=True,
                 plots=True, verbose=False, **(extra or {}))
     seconds = time.perf_counter() - t0
@@ -69,7 +69,7 @@ def _train_yolo(kind: str, cfg: dict, data_yaml, out_weights, epochs=None, extra
         "epochs_completed": int(len(hist)), "best_epoch": int(best["epoch"]),
         "training_time_seconds": round(seconds, 1),
         "best_val": {k.split("/")[-1]: round(float(best[k]), 4) for k in hist.columns if k.startswith("metrics/")},
-        "device": "cpu",
+        "device": C.DEVICE,
     }
     _save_json(summary, C.REPORT_DIR / f"{kind}_training.json")
     for f in ("results.png",):
@@ -228,7 +228,7 @@ def train_unet(epochs=None) -> dict:
                "loss": "weighted cross-entropy + soft Dice", "epochs_configured": epochs,
                "epochs_completed": len(history), "best_epoch": best_epoch,
                "best_val_defect_mIoU": round(best, 4), "training_time_seconds": round(seconds, 1),
-               "device": "cpu", "history": history}
+               "device": C.DEVICE, "history": history}
     _save_json(summary, C.REPORT_DIR / "unet_training.json")
     return summary
 

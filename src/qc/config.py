@@ -5,25 +5,35 @@ Windows, macOS and Linux.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# Training profile (set the environment variable QC_PROFILE before running):
+#   base   YOLO11n-seg, 256 px crops, 25 epochs  - what runs on a laptop CPU (default)
+#   large  YOLO11s-seg, 384 px crops, 100 epochs - for a GPU (e.g. Google Colab, see notebooks/)
+# The large profile writes to its own folders, so base results are never overwritten.
+PROFILE = os.environ.get("QC_PROFILE", "base")
+if PROFILE not in ("base", "large"):
+    raise ValueError("QC_PROFILE must be 'base' or 'large'")
+DEVICE = os.environ.get("QC_DEVICE", "cpu")      # "0" = first GPU
+
 # ------------------------------------------------------------------- paths
 DATASET_DIR = ROOT / "dataset"
 SCENE_DIR = DATASET_DIR / "scenes"          # full conveyor images (+ YOLO detection labels)
-DEFECT_DIR = DATASET_DIR / "defects"        # device crops (+ YOLO-seg polygons + U-Net masks)
+DEFECT_DIR = DATASET_DIR / ("defects" if PROFILE == "base" else "defects_384")  # device crops + labels
 ANNOTATION_DIR = DATASET_DIR / "annotations"  # ground truth per scene (JSON)
 SAMPLE_DIR = DATASET_DIR / "samples"        # a few demo images committed to git
 
 MODEL_DIR = ROOT / "models"
 DETECTOR_WEIGHTS = MODEL_DIR / "detector_yolo11n.pt"
-YOLO_SEG_WEIGHTS = MODEL_DIR / "segmenter_yolo11n_seg.pt"
+YOLO_SEG_WEIGHTS = MODEL_DIR / ("segmenter_yolo11n_seg.pt" if PROFILE == "base" else "segmenter_yolo11s_seg_384.pt")
 UNET_WEIGHTS = MODEL_DIR / "segmenter_unet.pt"
 
-RESULT_DIR = ROOT / "results"
+RESULT_DIR = ROOT / "results" if PROFILE == "base" else ROOT / "results" / "large"
 GRAPH_DIR = RESULT_DIR / "graphs"
 REPORT_DIR = RESULT_DIR / "reports"
 PRED_DIR = RESULT_DIR / "predictions"
@@ -50,12 +60,14 @@ PX_PER_MM = 12.0          # camera calibration: pixels per millimetre on the con
 # --------------------------------------------------------------- dataset
 SEED = 42
 N_SCENES = {"train": 500, "val": 100, "test": 150}
-CROP_SIZE = 256           # device crops fed to the segmentation models
+CROP_SIZE = 256 if PROFILE == "base" else 384   # device crops fed to the segmentation models
 CROP_PAD = 0.08           # padding around the detected device box
 
 # --------------------------------------------------------------- training
 DETECTOR = {"base": "yolo11n.pt", "imgsz": 416, "epochs": 10, "batch": 16, "patience": 5}
-YOLO_SEG = {"base": "yolo11n-seg.pt", "imgsz": 256, "epochs": 25, "batch": 16, "patience": 8}
+YOLO_SEG = ({"base": "yolo11n-seg.pt", "imgsz": 256, "epochs": 25, "batch": 16, "patience": 8}
+            if PROFILE == "base" else
+            {"base": "yolo11s-seg.pt", "imgsz": 384, "epochs": 100, "batch": 16, "patience": 25})
 UNET = {"base_channels": 16, "epochs": 30, "batch": 16, "lr": 2e-3, "patience": 8, "patch": 128}
 
 # -------------------------------------------------------------- inference
