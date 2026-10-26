@@ -23,5 +23,135 @@
       "misplaced": 0.8333333333333334
     },
     "heatmaps": "results/graphs/real_patchcore_heatmaps.png"
+  },
+  "supervised": {
+    "synthetic": {
+      "mean_mask_mAP50": 0.4135539280000155,
+      "std_mask_mAP50": 0.16393958683199747,
+      "folds": [
+        {
+          "fold": 0,
+          "mask_mAP50": 0.20623391248391248,
+          "mask_mAP50_95": 0.08764487773487775,
+          "box_mAP50": 0.2355583333333333
+        },
+        {
+          "fold": 1,
+          "mask_mAP50": 0.6414583333333332,
+          "mask_mAP50_95": 0.34324999999999994,
+          "box_mAP50": 0.8283333333333334
+        },
+        {
+          "fold": 2,
+          "mask_mAP50": 0.44210140791476416,
+          "mask_mAP50_95": 0.22977212190397128,
+          "box_mAP50": 0.4183009028642591
+        },
+        {
+          "fold": 3,
+          "mask_mAP50": 0.5258035714285714,
+          "mask_mAP50_95": 0.22885625000000004,
+          "box_mAP50": 0.532875
+        },
+        {
+          "fold": 4,
+          "mask_mAP50": 0.2521724148394962,
+          "mask_mAP50_95": 0.11710359410583585,
+          "box_mAP50": 0.38834991861497486
+        }
+      ],
+      "training_time_seconds": 5652.4,
+      "defect_type_accuracy_oof": 0.375,
+      "combined_decision_accuracy_heldout": 0.7333333333333333,
+      "combined_decision_macro_f1_heldout": 0.6416545248502509,
+      "combined_confusion_matrix": {
+        "labels": [
+          "PASS",
+          "REWORK",
+          "SCRAP"
+        ],
+        "matrix": [
+          [
+            31,
+            2,
+            3
+          ],
+          [
+            1,
+            5,
+            6
+          ],
+          [
+            3,
+            1,
+            8
+          ]
+        ]
+      }
+    },
+    "coco": {
+      "mean_mask_mAP50": 0.5899444347384744,
+      "std_mask_mAP50": 0.0876590547491362,
+      "folds": [
+        {
+          "fold": 0,
+          "mask_mAP50": 0.4852272727272727,
+          "mask_mAP50_95": 0.24274082167832164,
+          "box_mAP50": 0.4300189393939393
+        },
+        {
+          "fold": 1,
+          "mask_mAP50": 0.714375,
+          "mask_mAP50_95": 0.38890822963800903,
+          "box_mAP50": 0.658875
+        },
+        {
+          "fold": 2,
+          "mask_mAP50": 0.5426041666666667,
+          "mask_mAP50_95": 0.2954307291905658,
+          "box_mAP50": 0.5417708333333333
+        },
+        {
+          "fold": 3,
+          "mask_mAP50": 0.6721288295365279,
+          "mask_mAP50_95": 0.34069547001832945,
+          "box_mAP50": 0.6768884449211432
+        },
+        {
+          "fold": 4,
+          "mask_mAP50": 0.5353869047619046,
+          "mask_mAP50_95": 0.303702433166249,
+          "box_mAP50": 0.5887797619047618
+        }
+      ],
+      "training_time_seconds": 6383.6,
+      "defect_type_accuracy_oof": 0.7,
+      "combined_decision_accuracy_heldout": 0.7666666666666667,
+      "combined_decision_macro_f1_heldout": 0.7068504215255692,
+      "combined_confusion_matrix": {
+        "labels": [
+          "PASS",
+          "REWORK",
+          "SCRAP"
+        ],
+        "matrix": [
+          [
+            31,
+            0,
+            5
+          ],
+          [
+            1,
+            6,
+            5
+          ],
+          [
+            3,
+            0,
+            9
+          ]
+        ]
+      }
+    }
   }
 }

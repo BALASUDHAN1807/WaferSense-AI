@@ -310,6 +310,34 @@ Recall per defect type (held-out): bent lead 100.0 %, cut lead 66.7 %, damaged c
 ![PatchCore heat-maps on real transistors](../results/graphs/real_patchcore_heatmaps.png)
 
 
+### 12.2 Defect type with supervised YOLO11-seg (5-fold cross-validation)
+MVTec provides only 40 defective transistor images, so YOLO11n-seg (384 px) was trained with
+**stratified 5-fold cross-validation**: each image is predicted by a model that never saw it
+("out-of-fold"). 60 defect-free training images are added to every fold as negatives. Two starting
+points were compared — the model pretrained on **our synthetic IC data** (transfer from simulation to
+real) and the generic **COCO** model.
+
+### 12.3 Combined real-image inspection
+PatchCore decides *defect or not*; if a defect is found, the type predicted by YOLO11-seg chooses the
+verdict (`configs/transistor_rules.yaml`: bent lead / misplaced → REWORK, cut lead / damaged case →
+SCRAP). Ground truth: good → PASS, and the same mapping for the defect types.
+
+| Model | Mask mAP50 (5 folds) | Defect-type accuracy | Combined PASS/REWORK/SCRAP accuracy (held-out) | Macro F1 |
+|---|---|---|---|---|
+| YOLO11n-seg pretrained on our synthetic IC data | 0.414 ± 0.164 | 37.5 % | 73.3 % | 0.642 |
+| YOLO11n-seg pretrained on COCO (generic) | 0.590 ± 0.088 | 70.0 % | 76.7 % | 0.707 |
+
+Confusion matrix of the combined system with the pretrained on COCO (generic) model (held-out split, rows = truth):
+
+| True \ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+| **PASS** | 31 | 0 | 5 |
+| **REWORK** | 1 | 6 | 5 |
+| **SCRAP** | 3 | 0 | 9 |
+
+**Transfer from synthetic data:** starting from our synthetic-IC model gave mask mAP50 0.414 vs 0.590 from COCO, and defect-type accuracy 37.5 % vs 70.0 %. Synthetic pre-training did **not** help here: our synthetic IC packages look very different from MVTec's through-hole transistors (different shape, background and defect types), so the broader COCO features transfer better. Pre-training on synthetic images of the *same* product as the target line would be needed for that benefit.
+
+
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
 on real photographs, not only on the synthetic images. The numbers are lower than on synthetic data
 because real defects are subtler and only 40 labelled defect images exist — exactly the situation a new

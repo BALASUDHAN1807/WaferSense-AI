@@ -563,6 +563,18 @@ Confusion matrix of the combined system with the {INIT_NAMES.get(best, best)} mo
 |---|---|---|---|
 {cm_md}
 """)
+        if "synthetic" in sup and "coco" in sup:
+            s_, c_ = sup["synthetic"], sup["coco"]
+            better = s_["mean_mask_mAP50"] > c_["mean_mask_mAP50"]
+            out.append(
+                f"**Transfer from synthetic data:** starting from our synthetic-IC model gave mask mAP50 "
+                f"{f(s_['mean_mask_mAP50'])} vs {f(c_['mean_mask_mAP50'])} from COCO, and defect-type accuracy "
+                f"{pct(s_['defect_type_accuracy_oof'])} vs {pct(c_['defect_type_accuracy_oof'])}. "
+                + ("Synthetic pre-training helped on real images." if better else
+                   "Synthetic pre-training did **not** help here: our synthetic IC packages look very different "
+                   "from MVTec's through-hole transistors (different shape, background and defect types), so the "
+                   "broader COCO features transfer better. Pre-training on synthetic images of the *same* product "
+                   "as the target line would be needed for that benefit.") + "\n")
     out.append("""
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
 on real photographs, not only on the synthetic images. The numbers are lower than on synthetic data

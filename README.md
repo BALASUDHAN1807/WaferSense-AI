@@ -82,6 +82,8 @@ Measured on the held-out **test split** (150 camera frames, 307 devices), CPU on
 | PatchCore anomaly detection (no defect labels) | image AUROC, all 100 test images | 0.948 |
 | | pixel AUROC (localisation) | 0.842 |
 | | held-out accuracy / defect recall / false-reject rate | 85.0 % / 83.3 % / 13.9 % |
+| YOLO11n-seg, pretrained on our synthetic IC data (5-fold CV) | mask mAP50 / defect-type acc. / PASS-REWORK-SCRAP acc. | 0.414 / 37.5 % / 73.3 % |
+| YOLO11n-seg, pretrained on COCO (generic) (5-fold CV) | mask mAP50 / defect-type acc. / PASS-REWORK-SCRAP acc. | 0.590 / 70.0 % / 76.7 % |
 
 ![PatchCore heat-maps on real transistors](results/graphs/real_patchcore_heatmaps.png)
 
