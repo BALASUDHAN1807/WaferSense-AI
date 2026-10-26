@@ -64,6 +64,7 @@
 <main>
   <nav>
     <button data-tab="inspect" class="on">Inspect</button>
+    <button data-tab="real">Real transistor (MVTec)</button>
     <button data-tab="conveyor">Conveyor simulation</button>
     <button data-tab="analytics">Analytics</button>
     <button data-tab="rules">Quality rules</button>
@@ -88,6 +89,25 @@
       </div>
       <div class="panel tablewrap"><table id="defects"></table></div>
     </div>
+  </section>
+
+  <section id="tab-real" class="hidden">
+    <div class="panel">
+      <p style="margin-top:0">Real photographs of through-hole transistors from the public <b>MVTec AD</b> dataset. <b>PatchCore</b>, which learned only from defect-free photos, marks unusual regions in a heat-map. If the image is anomalous, <b>YOLO11n-seg</b> names the defect type (bent lead, cut lead, damaged case, misplaced), and the transistor rules give REWORK or SCRAP.</p>
+      <div id="rdrop" class="drop">Drop a top-view transistor photo here or <u>click to choose</u>
+        <input id="rfile" type="file" accept="image/*" class="hidden"></div>
+      <div class="muted" style="margin-top:12px">…or click a demo photo. None of these were used to train either model:</div>
+      <div id="rsamples" class="samples"></div>
+    </div>
+    <div id="rstatus" class="muted"></div>
+    <div id="rresult" class="hidden panel">
+      <div id="rsummary" style="margin-bottom:12px"></div>
+      <div class="imgs">
+        <figure><img id="rorig" alt="transistor photo"><figcaption>Photo</figcaption></figure>
+        <figure><img id="rheat" alt="anomaly heat-map"><figcaption>Anomaly heat-map (red = unlike any defect-free part) and detected defect</figcaption></figure>
+      </div>
+    </div>
+    <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 76.7 % accurate for the full PASS / REWORK / SCRAP verdict. With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
   </section>
 
   <section id="tab-conveyor" class="hidden">
@@ -119,7 +139,8 @@
     <div class="panel">
       <h3 style="margin-top:0">About this system</h3>
       <p>An AI quality-inspection system for packaged ICs. A <b>YOLO11n</b> model finds every device in the camera frame; each device is cropped and a <b>YOLO11n-seg</b> model outlines five defect types (crack, scratch, contamination, chip, missing pin). Each defect is measured in millimetres (12 px/mm camera calibration) and quality rules decide PASS, REWORK or SCRAP.</p>
-      <p>The models were trained by the author on a synthetic dataset of 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set (307 devices) this deployment makes the correct decision for 87.9 % of devices.</p>
+      <p>The <b>Real transistor</b> tab runs the same idea on real MVTec AD photographs: PatchCore anomaly detection plus a YOLO11n-seg defect-type model.</p>
+      <p>The IC-package models were trained by the author on a synthetic dataset of 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set (307 devices) this deployment makes the correct decision for 87.9 % of devices.</p>
       <p class="muted">Academic prototype trained on synthetic images — not a manufacturing quality-control decision. Source: <a href="https://github.com/BALASUDHAN1807/WaferSense-AI">github.com/BALASUDHAN1807/WaferSense-AI</a> · Author: Balasudhan R</p>
     </div>
   </section>
@@ -210,6 +231,43 @@ fetch("/api/samples").then(r => r.json()).then(names => {
     inspectFile(blob, im.dataset.n, im.src);
   });
 });
+
+// ---------- real transistor (MVTec AD)
+async function inspectReal(blob, name, src) {
+  $("#rstatus").textContent = "Inspecting…"; $("#rstatus").className = "muted";
+  try {
+    const fd = new FormData(); fd.append("file", blob, name);
+    const r = await fetch("/api/inspect-real", { method: "POST", body: fd });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.detail || `HTTP ${r.status}`);
+    $("#rstatus").textContent = "";
+    $("#rresult").classList.remove("hidden");
+    $("#rorig").src = src;
+    $("#rheat").src = "data:image/png;base64," + b.heatmap_png_base64;
+    const truth = name.match(/^(good|bent_lead|cut_lead|damaged_case|misplaced)_/);
+    $("#rsummary").innerHTML = `<b>Result:</b> ${badge(b.decision, true)} &nbsp; ` +
+      (b.defect_type ? `defect type <b>${esc(b.defect_type.replace("_", " "))}</b> · ` : "") +
+      `anomaly score ${b.anomaly_score.toFixed(2)} (threshold ${b.threshold.toFixed(2)}) · ${esc(b.reason)}` +
+      (truth ? ` · <span class="muted">true label: ${esc(truth[1].replace("_", " "))}</span>` : "") +
+      ` · <span class="muted">${b.timings_ms.total.toFixed(0)} ms</span>`;
+  } catch (e) {
+    $("#rstatus").textContent = "Inspection failed: " + e.message + " (the first request after a pause can take a few seconds while the models load, so try again)";
+    $("#rstatus").className = "err";
+  }
+}
+const rdrop = $("#rdrop"), rfile = $("#rfile");
+rdrop.onclick = () => rfile.click();
+rfile.onchange = () => rfile.files[0] && inspectReal(rfile.files[0], rfile.files[0].name, URL.createObjectURL(rfile.files[0]));
+rdrop.ondragover = e => { e.preventDefault(); rdrop.classList.add("over"); };
+rdrop.ondragleave = () => rdrop.classList.remove("over");
+rdrop.ondrop = e => { e.preventDefault(); rdrop.classList.remove("over"); const f = e.dataTransfer.files[0]; f && inspectReal(f, f.name, URL.createObjectURL(f)); };
+fetch("/api/real-samples").then(r => r.json()).then(list => {
+  $("#rsamples").innerHTML = list.map(s => `<img src="/${s.file}" alt="${esc(s.label)}" title="${esc(s.label.replace("_", " "))}" data-n="${esc(s.file.split("/").pop())}">`).join("");
+  $("#rsamples").querySelectorAll("img").forEach(im => im.onclick = async () => {
+    const blob = await (await fetch(im.src)).blob();
+    inspectReal(blob, im.dataset.n, im.src);
+  });
+}).catch(() => {});
 
 // ---------- conveyor
 let running = false;
