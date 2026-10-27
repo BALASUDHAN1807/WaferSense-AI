@@ -52,6 +52,12 @@
   .muted { color: var(--muted); }
   .hidden { display: none; }
   .err { color: var(--scrap); }
+  .camgrid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .camgrid figure { flex: 1 1 300px; margin: 0; min-width: 0; position: relative; }
+  .camgrid video, .camgrid img { width: 100%; border-radius: 8px; display: block; background: #222; aspect-ratio: 4 / 3; object-fit: contain; }
+  .live { position: absolute; top: 8px; left: 8px; background: var(--scrap); color: #fff; font-size: .75rem; font-weight: 700; padding: 1px 7px; border-radius: 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  select { font: inherit; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
   footer { color: var(--muted); font-size: .82rem; max-width: 1180px; margin: 0 auto; padding: 0 16px 28px; }
 </style>
 </head>
@@ -65,6 +71,7 @@
   <nav>
     <button data-tab="inspect" class="on">Inspect</button>
     <button data-tab="real">Real transistor (MVTec)</button>
+    <button data-tab="camera">Live camera</button>
     <button data-tab="conveyor">Conveyor simulation</button>
     <button data-tab="analytics">Analytics</button>
     <button data-tab="rules">Quality rules</button>
@@ -108,6 +115,35 @@
       </div>
     </div>
     <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 81.7 % accurate for the full PASS / REWORK / SCRAP verdict (95 % confidence interval 72–92 %). With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
+  </section>
+
+  <section id="tab-camera" class="hidden">
+    <div class="panel">
+      <p style="margin-top:0">Point your phone or webcam at a part, as a camera above a production line would. A frame is sent for inspection about once per second, and the latest verdict appears next to the live view. Frames are only sent to this site's inspection API, are not stored, and history stays in your browser.</p>
+      <div class="controls">
+        <select id="cammodel" aria-label="Model">
+          <option value="ic">IC packages (YOLO11 + YOLO11-seg)</option>
+          <option value="real">Real transistor (PatchCore + YOLO11-seg)</option>
+        </select>
+        <select id="camface" aria-label="Camera">
+          <option value="environment">Back camera</option>
+          <option value="user">Front camera / webcam</option>
+        </select>
+        <button id="camstart" class="btn">Start camera</button>
+        <button id="camstop" class="btn ghost" disabled>Stop</button>
+        <button id="camsnap" class="btn ghost" disabled>Inspect this frame</button>
+        <label class="muted"><input type="checkbox" id="camauto" checked> continuous</label>
+      </div>
+      <div id="camstat" class="muted" style="margin-top:8px"></div>
+    </div>
+    <div class="panel">
+      <div class="camgrid">
+        <figure><video id="camvideo" playsinline muted></video><span id="camlive" class="live hidden">LIVE</span><figcaption>Camera</figcaption></figure>
+        <figure><img id="camout" alt="latest inspection"><figcaption id="camcap">Latest inspection</figcaption></figure>
+      </div>
+      <div id="camsum" style="margin-top:10px"></div>
+    </div>
+    <p class="muted">Tip: the IC model was trained on synthetic top-view chip images and the transistor model on MVTec photos, so it works best on similar top-down views with even lighting. On a real phone camera, results are a demonstration rather than a measured accuracy.</p>
   </section>
 
   <section id="tab-conveyor" class="hidden">
@@ -268,6 +304,99 @@ fetch("/api/real-samples").then(r => r.json()).then(list => {
     inspectReal(blob, im.dataset.n, im.src);
   });
 }).catch(() => {});
+
+// ---------- live camera
+const cam = { stream: null, busy: false, timer: null, tally: { PASS: 0, REWORK: 0, SCRAP: 0 }, n: 0 };
+const camCanvas = document.createElement("canvas");
+function camGrab() {
+  const v = $("#camvideo"), w = v.videoWidth, h = v.videoHeight;
+  if (!w) return Promise.resolve(null);
+  const k = Math.min(1, 800 / Math.max(w, h));                 // keep uploads small (< 200 KB)
+  camCanvas.width = Math.round(w * k); camCanvas.height = Math.round(h * k);
+  camCanvas.getContext("2d").drawImage(v, 0, 0, camCanvas.width, camCanvas.height);
+  return new Promise(res => camCanvas.toBlob(res, "image/jpeg", 0.85));
+}
+async function camInspect() {
+  if (cam.busy || !cam.stream) return;
+  cam.busy = true;
+  try {
+    const blob = await camGrab();
+    if (!blob) return;
+    const real = $("#cammodel").value === "real";
+    const fd = new FormData(); fd.append("file", blob, `camera_${Date.now()}.jpg`);
+    const t0 = performance.now();
+    const r = await fetch(real ? "/api/inspect-real" : "/api/inspect", { method: "POST", body: fd });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.detail || `HTTP ${r.status}`);
+    const ms = performance.now() - t0;
+    cam.n++;
+    let verdict, detail;
+    if (real) {
+      verdict = b.decision;
+      $("#camout").src = "data:image/png;base64," + b.heatmap_png_base64;
+      $("#camcap").textContent = "Anomaly heat-map (red = unusual) and detected defect";
+      detail = (b.defect_type ? `defect type <b>${esc(b.defect_type.replace("_", " "))}</b> · ` : "") +
+               `anomaly score ${b.anomaly_score.toFixed(2)} / ${b.threshold.toFixed(2)}`;
+      cam.tally[verdict]++;
+    } else {
+      verdict = b.overall;
+      $("#camout").src = "data:image/png;base64," + b.annotated_image_png_base64;
+      $("#camcap").textContent = "Detected devices (box colour = decision) and defects";
+      DEC.forEach(d => cam.tally[d] += b.counts[d]);
+      const defects = {};
+      b.devices.forEach(d => d.defects.forEach(f => defects[f.cls] = (defects[f.cls] || 0) + 1));
+      history.push({ t: new Date().toISOString(), name: "camera frame", overall: b.overall, counts: b.counts,
+                     ms: b.timings_ms.total, defects });
+      saveHist(history);
+      detail = `${b.devices.length} device(s)` + Object.entries(defects).map(([k, v]) => ` · ${v} ${esc(k.replace("_", " "))}`).join("");
+    }
+    $("#camsum").innerHTML = `<b>Latest frame:</b> ${badge(verdict === "NO_DEVICE" ? "NO_DEVICE" : verdict, true)} &nbsp; ${detail} · <span class="muted">${ms.toFixed(0)} ms round trip</span>` +
+      `<div style="margin-top:8px">${cam.n} frame(s) inspected · ` + DEC.map(d => `${badge(d)} ${cam.tally[d]}`).join(" &nbsp; ") + `</div>`;
+    $("#camstat").textContent = ""; $("#camstat").className = "muted";
+  } catch (e) {
+    $("#camstat").textContent = "Inspection failed: " + e.message + " (the first request after a pause can take a few seconds while the models load)";
+    $("#camstat").className = "err";
+  } finally { cam.busy = false; }
+}
+function camLoop() {
+  clearInterval(cam.timer);
+  if ($("#camauto").checked && cam.stream) cam.timer = setInterval(camInspect, 1000);
+}
+async function camStart() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    $("#camstat").textContent = "This browser cannot open a camera (it needs HTTPS and camera support). Try Chrome, Safari or Edge.";
+    $("#camstat").className = "err"; return;
+  }
+  camStop();
+  try {
+    cam.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: $("#camface").value }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+  } catch (e) {
+    $("#camstat").textContent = e.name === "NotAllowedError" ? "Camera permission was denied. Allow camera access for this site and try again." :
+      e.name === "NotFoundError" ? "No camera found on this device." : "Could not open the camera: " + e.message;
+    $("#camstat").className = "err"; cam.stream = null; return;
+  }
+  const v = $("#camvideo"); v.srcObject = cam.stream; await v.play().catch(() => {});
+  cam.tally = { PASS: 0, REWORK: 0, SCRAP: 0 }; cam.n = 0;
+  $("#camlive").classList.remove("hidden");
+  $("#camstart").disabled = true; $("#camstop").disabled = false; $("#camsnap").disabled = false;
+  $("#camstat").textContent = "Camera on."; $("#camstat").className = "muted";
+  camLoop();
+}
+function camStop() {
+  clearInterval(cam.timer); cam.timer = null;
+  if (cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+  cam.stream = null; $("#camvideo").srcObject = null;
+  $("#camlive").classList.add("hidden");
+  $("#camstart").disabled = false; $("#camstop").disabled = true; $("#camsnap").disabled = true;
+}
+$("#camstart").onclick = camStart;
+$("#camstop").onclick = () => { camStop(); $("#camstat").textContent = "Camera off."; };
+$("#camsnap").onclick = camInspect;
+$("#camauto").onchange = camLoop;
+$("#camface").onchange = () => cam.stream && camStart();
+$("#cammodel").onchange = () => { cam.tally = { PASS: 0, REWORK: 0, SCRAP: 0 }; cam.n = 0; };
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => { if (b.dataset.tab !== "camera") camStop(); }));
+document.addEventListener("visibilitychange", () => { if (document.hidden) camStop(); });
 
 // ---------- conveyor
 let running = false;

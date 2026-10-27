@@ -273,6 +273,7 @@ Selection criterion: highest end-to-end decision macro F1 on the test split (tie
 | FastAPI | `/inspect`, `/history`, `/inspections/{id}`, `/stats`, `/rules`, `/health` | `python run_project.py api` |
 | Streamlit | upload & inspect, conveyor simulation, analytics, rules | `python run_project.py dashboard` |
 | SQLite | every inspection, device and defect | `results/inspections.db` |
+| Web demo (Vercel) | ONNX models behind FastAPI: upload, real-transistor mode, **live phone/webcam camera** (about one frame per second sent for inspection), conveyor, analytics | https://semiconductor-qc.vercel.app |
 
 ![Dashboard](../results/graphs/dashboard_screenshot.png)
 
