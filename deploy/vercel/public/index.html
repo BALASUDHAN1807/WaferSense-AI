@@ -93,7 +93,7 @@
 
   <section id="tab-real" class="hidden">
     <div class="panel">
-      <p style="margin-top:0">Real photographs of through-hole transistors from the public <b>MVTec AD</b> dataset. <b>PatchCore</b>, which learned only from defect-free photos, marks unusual regions in a heat-map. If the image is anomalous, <b>YOLO11n-seg</b> names the defect type (bent lead, cut lead, damaged case, misplaced), and the transistor rules give REWORK or SCRAP.</p>
+      <p style="margin-top:0">Real photographs of through-hole transistors from the public <b>MVTec AD</b> dataset. <b>PatchCore</b>, which learned only from defect-free photos, marks unusual regions in a heat-map. <b>YOLO11n-seg</b> looks for the four defect types. A photo is defective if either model flags it (score fusion), and the YOLO11n-seg type (bent lead, cut lead, damaged case, misplaced), then goes through the transistor rules to give REWORK or SCRAP.</p>
       <div id="rdrop" class="drop">Drop a top-view transistor photo here or <u>click to choose</u>
         <input id="rfile" type="file" accept="image/*" class="hidden"></div>
       <div class="muted" style="margin-top:12px">…or click a demo photo. None of these were used to train either model:</div>
@@ -107,7 +107,7 @@
         <figure><img id="rheat" alt="anomaly heat-map"><figcaption>Anomaly heat-map (red = unlike any defect-free part) and detected defect</figcaption></figure>
       </div>
     </div>
-    <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 76.7 % accurate for the full PASS / REWORK / SCRAP verdict. With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
+    <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 81.7 % accurate for the full PASS / REWORK / SCRAP verdict (95 % confidence interval 72–92 %). With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
   </section>
 
   <section id="tab-conveyor" class="hidden">
@@ -247,7 +247,7 @@ async function inspectReal(blob, name, src) {
     const truth = name.match(/^(good|bent_lead|cut_lead|damaged_case|misplaced)_/);
     $("#rsummary").innerHTML = `<b>Result:</b> ${badge(b.decision, true)} &nbsp; ` +
       (b.defect_type ? `defect type <b>${esc(b.defect_type.replace("_", " "))}</b> · ` : "") +
-      `anomaly score ${b.anomaly_score.toFixed(2)} (threshold ${b.threshold.toFixed(2)}) · ${esc(b.reason)}` +
+      `anomaly score ${b.anomaly_score.toFixed(2)} (threshold ${b.threshold.toFixed(2)})` + (b.flagged_by.length ? ` · flagged by ${b.flagged_by.join(" + ")}` : "") + ` · ${esc(b.reason)}` +
       (truth ? ` · <span class="muted">true label: ${esc(truth[1].replace("_", " "))}</span>` : "") +
       ` · <span class="muted">${b.timings_ms.total.toFixed(0)} ms</span>`;
   } catch (e) {

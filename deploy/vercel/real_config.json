@@ -1,7 +1,7 @@
 {
   "patchcore": {
     "img_size": 256,
-    "threshold": 5.6490983963012695,
+    "threshold": 5.7339,
     "blur_sigma": 4
   },
   "seg": {
@@ -12,7 +12,8 @@
       "damaged_case",
       "misplaced"
     ],
-    "conf": 0.1
+    "conf": 0.1,
+    "gate_conf": 0.2
   },
   "rules": {
     "bent_lead": {

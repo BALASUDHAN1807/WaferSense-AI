@@ -3,8 +3,9 @@
 Same two stages as src/qc/real/ (evaluated with 5-fold cross-validation in the report):
 
     PatchCore (learned from defect-free photos only) -> anomaly score + heat-map
-        score < threshold                -> PASS
-        score >= threshold -> YOLO11n-seg defect type -> transistor rules -> REWORK / SCRAP
+        defective = PatchCore score >= t_pc  OR  YOLO11n-seg confidence >= t_seg  (score fusion)
+        not defective -> PASS
+        defective     -> YOLO11n-seg defect type -> transistor rules -> REWORK / SCRAP
 
 Only onnxruntime + numpy + Pillow are used.
 """
@@ -106,9 +107,11 @@ class RealEngine:
         dets = self.defect_type(img)
         t2 = time.perf_counter()
         thr = self.pc["threshold"]
-        anomalous = score >= thr
+        gate = self.sc.get("gate_conf")                                  # score fusion (report 12.4)
+        seg_hit = bool(dets) and gate is not None and dets[0]["confidence"] >= gate
+        anomalous = score >= thr or seg_hit
         if not anomalous:
-            dtype, decision, reason = None, "PASS", "no anomaly above the threshold learned from defect-free parts"
+            dtype, decision, reason = None, "PASS", "no anomaly and no confident defect detection"
         else:
             dtype = dets[0]["cls"] if dets else "unknown"
             rule = self.rules.get(dtype, self.rules["unknown"])
@@ -116,6 +119,7 @@ class RealEngine:
         result = {
             "decision": decision, "reason": reason, "defect_type": dtype,
             "anomaly_score": round(score, 3), "threshold": round(thr, 3), "anomalous": bool(anomalous),
+            "flagged_by": ([n for n, v in (("PatchCore", score >= thr), ("YOLO11-seg", seg_hit)) if v]),
             "detections": [{k: v for k, v in d.items() if k != "mask"} for d in dets[:3]],
             "timings_ms": {"patchcore": round((t1 - t0) * 1e3, 1), "type_model": round((t2 - t1) * 1e3, 1),
                            "total": round((time.perf_counter() - t0) * 1e3, 1)},

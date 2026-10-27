@@ -175,6 +175,9 @@ def main(argv=None) -> int:
             print(init, json.dumps({k: v for k, v in results["supervised"][init].items() if k != "folds"}))
     (C.REPORT_DIR / "real_evaluation.json").write_text(json.dumps(results, indent=2))
     print("Saved results/reports/real_evaluation.json")
+    if "coco" in results.get("supervised", {}):
+        from qc.real.fusion import main as fusion_main      # score fusion + bootstrap CIs (report 12.4-12.5)
+        fusion_main()
     return 0
 
 

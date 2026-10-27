@@ -1,7 +1,7 @@
 # Computer Vision-Based Industrial Quality Control & Defect Detection System
 ## Application: Semiconductor Device (IC Package) Inspection
 
-ML Project Report · generated 2026-10-26 from the project's result files
+ML Project Report · generated 2026-10-27 from the project's result files
 
 **Author:** Balasudhan R (RA2411003012164)
 
@@ -336,6 +336,43 @@ Confusion matrix of the combined system with the pretrained on COCO (generic) mo
 | **SCRAP** | 3 | 0 | 9 |
 
 **Transfer from synthetic data:** starting from our synthetic-IC model gave mask mAP50 0.414 vs 0.590 from COCO, and defect-type accuracy 37.5 % vs 70.0 %. Synthetic pre-training did **not** help here: our synthetic IC packages look very different from MVTec's through-hole transistors (different shape, background and defect types), so the broader COCO features transfer better. Pre-training on synthetic images of the *same* product as the target line would be needed for that benefit.
+
+
+### 12.4 Upgrade: score fusion
+In 12.3 PatchCore alone decides *defect or not*, so a defect it misses is passed even when YOLO11-seg
+sees it clearly (e.g. a misplaced transistor detected with 64 % confidence). The upgraded rule flags a
+part when **either** model is confident:
+
+`defective = PatchCore score ≥ t_pc  OR  best YOLO11-seg confidence ≥ t_seg`
+
+Both thresholds were chosen together on the **calibration split only** (best macro F1 of the
+PASS / REWORK / SCRAP decision); YOLO11-seg predictions are out-of-fold, so no image is judged by a model
+that saw it. The held-out split was used once, to report. 95 % confidence intervals come from
+2,000 bootstrap resamples of the 60 held-out images.
+
+| Decision rule (held-out, 95 % CI) | Accuracy | Macro F1 | Defect recall | False-reject rate |
+|---|---|---|---|---|
+| PatchCore decides alone (12.3) | 76.7 % (65.0 % – 86.7 %) | 0.707 (0.568 – 0.827) | 83.3 % (68.4 % – 96.2 %) | 13.9 % (3.0 % – 26.8 %) |
+| **Fusion**: PatchCore ≥ 5.73 OR YOLO11-seg ≥ 0.20 | 81.7 % (71.7 % – 91.7 %) | 0.750 (0.607 – 0.877) | 87.5 % (73.7 % – 100.0 %) | 8.3 % (0.0 % – 19.4 %) |
+
+Confusion matrix with fusion (held-out, rows = truth):
+
+| True \ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+| **PASS** | 33 | 0 | 3 |
+| **REWORK** | 1 | 6 | 5 |
+| **SCRAP** | 2 | 0 | 10 |
+
+Fusion gets 5.0 percentage points more of the
+held-out decisions right and rejects fewer good parts. The confidence intervals still overlap, so with 60 held-out
+images this is a consistent improvement rather than a statistically proven one. The remaining weakness is
+**bent leads**: they are flagged as defective but YOLO11-seg rarely names the type, so they get SCRAP
+(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples.
+
+### 12.5 Uncertainty of the real-image results
+Held-out PatchCore image AUROC 0.922 has a 95 % CI of
+0.845 – 0.980. Every real-image number in this section comes from 100 test images (40 defective),
+so differences of a few percentage points are within noise.
 
 
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works

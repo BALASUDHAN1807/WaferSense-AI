@@ -131,6 +131,12 @@ def readme_real_block(real: dict) -> str:
              f"| PatchCore anomaly detection (no defect labels) | image AUROC, all 100 test images | {f(pc['image_AUROC_all_test'])} |",
              f"| | pixel AUROC (localisation) | {f(pc['pixel_AUROC_all_test'])} |",
              f"| | held-out accuracy / defect recall / false-reject rate | {pct(h['accuracy'])} / {pct(h['defect_recall'])} / {pct(h['false_reject_rate'])} |"]
+    fu = real.get("fusion")
+    if fu:
+        z = fu["fusion"]
+        lines.append(f"| Upgrade: score fusion (PatchCore OR YOLO11-seg) | PASS-REWORK-SCRAP acc. (95 % CI) / false-reject rate | "
+                     f"**{pct(z['heldout']['accuracy'])}** ({pct(z['ci95']['accuracy'][0])} – {pct(z['ci95']['accuracy'][1])}) / "
+                     f"{pct(z['heldout']['false_reject_rate'])} |")
     for k, v in (real.get("supervised") or {}).items():
         lines.append(f"| YOLO11n-seg, {INIT_NAMES.get(k, k)} (5-fold CV) | mask mAP50 / defect-type acc. / "
                      f"PASS-REWORK-SCRAP acc. | {f(v['mean_mask_mAP50'])} / {pct(v['defect_type_accuracy_oof'])} / "
@@ -575,6 +581,54 @@ Confusion matrix of the combined system with the {INIT_NAMES.get(best, best)} mo
                    "from MVTec's through-hole transistors (different shape, background and defect types), so the "
                    "broader COCO features transfer better. Pre-training on synthetic images of the *same* product "
                    "as the target line would be needed for that benefit.") + "\n")
+    fu = real.get("fusion")
+    if fu:
+        po, fz = fu["patchcore_only"], fu["fusion"]
+        ci = lambda r, k: f"{pct(r['heldout'][k])} ({pct(r['ci95'][k][0])} – {pct(r['ci95'][k][1])})"
+        cif = lambda r, k: f"{f(r['heldout'][k])} ({f(r['ci95'][k][0])} – {f(r['ci95'][k][1])})"
+        rows = "\n".join(
+            f"| {name} | {ci(r, 'accuracy')} | {cif(r, 'macro_f1')} | {ci(r, 'defect_recall')} | {ci(r, 'false_reject_rate')} |"
+            for name, r in (("PatchCore decides alone (12.3)", po),
+                            (f"**Fusion**: PatchCore ≥ {fz['patchcore_threshold']:.2f} OR YOLO11-seg ≥ "
+                             f"{fz['seg_conf_threshold']:.2f}", fz)))
+        cm = fz["confusion_matrix"]
+        cm_md = "\n".join(f"| **{l}** | " + " | ".join(str(x) for x in r) + " |"
+                          for l, r in zip(cm["labels"], cm["matrix"]))
+        lo, hi = fu["patchcore_auroc_heldout_ci95"]
+        out.append(f"""
+### 12.4 Upgrade: score fusion
+In 12.3 PatchCore alone decides *defect or not*, so a defect it misses is passed even when YOLO11-seg
+sees it clearly (e.g. a misplaced transistor detected with 64 % confidence). The upgraded rule flags a
+part when **either** model is confident:
+
+`defective = PatchCore score ≥ t_pc  OR  best YOLO11-seg confidence ≥ t_seg`
+
+Both thresholds were chosen together on the **calibration split only** (best macro F1 of the
+PASS / REWORK / SCRAP decision); YOLO11-seg predictions are out-of-fold, so no image is judged by a model
+that saw it. The held-out split was used once, to report. 95 % confidence intervals come from
+{fu['n_bootstrap']:,} bootstrap resamples of the {fu['heldout_images']} held-out images.
+
+| Decision rule (held-out, 95 % CI) | Accuracy | Macro F1 | Defect recall | False-reject rate |
+|---|---|---|---|---|
+{rows}
+
+Confusion matrix with fusion (held-out, rows = truth):
+
+| True \\ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+{cm_md}
+
+Fusion gets {100 * (fz['heldout']['accuracy'] - po['heldout']['accuracy']):.1f} percentage points more of the
+held-out decisions right and rejects fewer good parts. The confidence intervals still overlap, so with 60 held-out
+images this is a consistent improvement rather than a statistically proven one. The remaining weakness is
+**bent leads**: they are flagged as defective but YOLO11-seg rarely names the type, so they get SCRAP
+(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples.
+
+### 12.5 Uncertainty of the real-image results
+Held-out PatchCore image AUROC {f(real['patchcore']['image_AUROC_heldout'])} has a 95 % CI of
+{f(lo)} – {f(hi)}. Every real-image number in this section comes from 100 test images (40 defective),
+so differences of a few percentage points are within noise.
+""")
     out.append("""
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
 on real photographs, not only on the synthetic images. The numbers are lower than on synthetic data

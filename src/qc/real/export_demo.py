@@ -84,14 +84,16 @@ def main(argv=None) -> int:
     samples = load_samples()
     demo = pick_demo(samples)
     real = json.loads((C.REPORT_DIR / "real_evaluation.json").read_text())
-    cfg = {"patchcore": export_patchcore(real["patchcore"]["threshold"])}
+    fus = real.get("fusion", {}).get("fusion")          # python -m qc.real.fusion
+    cfg = {"patchcore": export_patchcore(fus["patchcore_threshold"] if fus else real["patchcore"]["threshold"])}
 
     from ultralytics import YOLO
     w = train_final(samples, demo)
     onnx = YOLO(str(w)).export(format="onnx", imgsz=IMGSZ, opset=17, simplify=False)
     shutil.copy(onnx, DEPLOY / "models" / "transistor_seg.onnx")
     rules = yaml.safe_load((C.ROOT / "configs" / "transistor_rules.yaml").read_text())
-    cfg["seg"] = {"img_size": IMGSZ, "classes": DEFECT_TYPES, "conf": 0.10}
+    cfg["seg"] = {"img_size": IMGSZ, "classes": DEFECT_TYPES, "conf": 0.10,
+                 "gate_conf": fus["seg_conf_threshold"] if fus else None}
     cfg["rules"] = rules
 
     pub = DEPLOY / "public" / "real"
