@@ -13,7 +13,9 @@
     python run_project.py api                 FastAPI backend   -> http://127.0.0.1:8000/docs
     python run_project.py dashboard           Streamlit dashboard -> http://localhost:8501
     python run_project.py serve               API + dashboard together
+    python run_project.py finetune-yoloseg    2nd training stage: warm start + class oversampling + cosine LR
     python run_project.py real-eval           REAL images: MVTec AD transistor (PatchCore + YOLO11-seg CV)
+    python run_project.py real-typecls        REAL images: defect-type classifier (full photo vs PatchCore crop)
     python run_project.py report              regenerate report/Project_Report.md and README results
     python run_project.py test                pytest suite
     python run_project.py all                 generate -> validate -> eda -> train-all -> evaluate -> report
@@ -118,6 +120,16 @@ def cmd_real_eval(a):
     return main(a)
 
 
+def cmd_finetune(a):
+    from qc.finetune import main
+    return main(a)
+
+
+def cmd_real_typecls(a):
+    from qc.real.type_classifier import main
+    return main(a)
+
+
 def cmd_report(a):
     from qc.report import main
     return main()
@@ -146,6 +158,7 @@ COMMANDS = {
     "train-detector": _train("detector"), "train-yoloseg": _train("yolo-seg"), "train-unet": _train("unet"),
     "train-all": _train("all"), "evaluate": cmd_evaluate, "inspect": cmd_inspect, "camera": cmd_camera,
     "api": cmd_api, "dashboard": cmd_dashboard, "serve": cmd_serve, "report": cmd_report, "real-eval": cmd_real_eval,
+    "finetune-yoloseg": cmd_finetune, "real-typecls": cmd_real_typecls,
     "test": cmd_test, "all": cmd_all,
 }
 

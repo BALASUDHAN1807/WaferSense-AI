@@ -39,3 +39,7 @@ results/conveyor_demo.mp4
 dataset/defects_384/
 dataset/real/
 results/large/runs/
+
+# fine-tune lists and classifier CV crops (regenerated)
+dataset/defects/train_balanced.txt
+dataset/defects/data_balanced.yaml
