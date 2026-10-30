@@ -1,8 +1,8 @@
 {
   "segmenter": "yolo",
   "segmenter_name": "YOLO11n-seg",
-  "decision_macro_f1": 0.8774984050459821,
-  "decision_accuracy": 0.8859934853420195,
-  "latency_ms_per_frame": 100.11399999999999,
-  "reason": "YOLO11n-seg gives the highest end-to-end decision macro F1 (0.8775, accuracy 0.8860) vs U-Net (0.8178)."
+  "decision_macro_f1": 0.9400904512844811,
+  "decision_accuracy": 0.9511400651465798,
+  "latency_ms_per_frame": 158.75533333333334,
+  "reason": "YOLO11n-seg gives the highest end-to-end decision macro F1 (0.9401, accuracy 0.9511) vs U-Net (0.8178)."
 }

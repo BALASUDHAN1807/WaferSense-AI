@@ -5,7 +5,9 @@ Same two stages as src/qc/real/ (evaluated with 5-fold cross-validation in the r
     PatchCore (learned from defect-free photos only) -> anomaly score + heat-map
         defective = PatchCore score >= t_pc  OR  YOLO11n-seg confidence >= t_seg  (score fusion)
         not defective -> PASS
-        defective     -> YOLO11n-seg defect type -> transistor rules -> REWORK / SCRAP
+        defective     -> defect type -> transistor rules -> REWORK / SCRAP
+                         type = YOLO11s-cls on a crop around PatchCore's hottest point (report 12.6),
+                                or YOLO11n-seg's top detection when the classifier is not exported
 
 Only onnxruntime + numpy + Pillow are used.
 """
@@ -62,6 +64,9 @@ class RealEngine:
         self.bank = np.load(m / "patchcore_bank.npy").astype(np.float32)
         self.bank_sq = (self.bank ** 2).sum(1)
         self.pc, self.sc, self.rules = RCFG["patchcore"], RCFG["seg"], RCFG["rules"]
+        self.tc = RCFG.get("type_cls")
+        self.cls = (ort.InferenceSession(str(m / "transistor_type_cls.onnx"), opts, providers=["CPUExecutionProvider"])
+                    if self.tc and (m / "transistor_type_cls.onnx").exists() else None)
 
     def anomaly(self, img: Image.Image):
         s = self.pc["img_size"]
@@ -99,6 +104,27 @@ class RealEngine:
                         "box": b.clip(0, 1).tolist(), "mask": masks[j]})
         return sorted(out, key=lambda d: -d["confidence"])
 
+    def crop_box(self, img: Image.Image, amap: np.ndarray):
+        """Square (normalised x1, y1, x2, y2) around the anomaly map's maximum, as in training."""
+        W, H = img.size
+        y, x = np.unravel_index(int(np.argmax(amap)), amap.shape)
+        cy, cx = (y + 0.5) / amap.shape[0] * H, (x + 0.5) / amap.shape[1] * W
+        s = int(self.tc["crop_fraction"] * max(H, W))
+        x0 = int(np.clip(cx - s / 2, 0, W - s)); y0 = int(np.clip(cy - s / 2, 0, H - s))
+        return x0, y0, s
+
+    def classify(self, img: Image.Image, amap: np.ndarray):
+        x0, y0, s = self.crop_box(img, amap)
+        n = self.tc["img_size"]
+        crop = img.crop((x0, y0, x0 + s, y0 + s)).resize((n, n), Image.BILINEAR)
+        x = np.asarray(crop, np.float32).transpose(2, 0, 1)[None] / 255.0
+        p = self.cls.run(None, {self.cls.get_inputs()[0].name: x})[0][0]
+        W, H = img.size
+        k = int(p.argmax())
+        return {"cls": self.tc["classes"][k], "confidence": float(p[k]),
+                "probs": {c: round(float(v), 4) for c, v in zip(self.tc["classes"], p)},
+                "box": [x0 / W, y0 / H, (x0 + s) / W, (y0 + s) / H]}
+
     def inspect(self, img: Image.Image):
         t0 = time.perf_counter()
         img = img.convert("RGB")
@@ -110,21 +136,27 @@ class RealEngine:
         gate = self.sc.get("gate_conf")                                  # score fusion (report 12.4)
         seg_hit = bool(dets) and gate is not None and dets[0]["confidence"] >= gate
         anomalous = score >= thr or seg_hit
+        typ = self.classify(img, amap) if anomalous and self.cls is not None else None
+        t3 = time.perf_counter()
         if not anomalous:
             dtype, decision, reason = None, "PASS", "no anomaly and no confident defect detection"
         else:
-            dtype = dets[0]["cls"] if dets else "unknown"
+            dtype = typ["cls"] if typ else (dets[0]["cls"] if dets else "unknown")
             rule = self.rules.get(dtype, self.rules["unknown"])
             decision, reason = rule["verdict"], rule["reason"]
         result = {
             "decision": decision, "reason": reason, "defect_type": dtype,
             "anomaly_score": round(score, 3), "threshold": round(thr, 3), "anomalous": bool(anomalous),
+            "type_source": None if not anomalous else ("YOLO11s-cls (PatchCore crop)" if typ else "YOLO11-seg"),
+            "type_classifier": typ,
             "flagged_by": ([n for n, v in (("PatchCore", score >= thr), ("YOLO11-seg", seg_hit)) if v]),
             "detections": [{k: v for k, v in d.items() if k != "mask"} for d in dets[:3]],
             "timings_ms": {"patchcore": round((t1 - t0) * 1e3, 1), "type_model": round((t2 - t1) * 1e3, 1),
+                           "type_classifier": round((t3 - t2) * 1e3, 1),
                            "total": round((time.perf_counter() - t0) * 1e3, 1)},
         }
-        return result, self.render(img, amap, dets if anomalous else [], result)
+        shown = ([dict(typ)] if typ else dets) if anomalous else []
+        return result, self.render(img, amap, shown, result)
 
     def render(self, img, amap, dets, result, size=384):
         base = np.asarray(img.resize((size, size), Image.BILINEAR), np.float32)

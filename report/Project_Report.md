@@ -1,7 +1,7 @@
 # Computer Vision-Based Industrial Quality Control & Defect Detection System
 ## Application: Semiconductor Device (IC Package) Inspection
 
-ML Project Report · generated 2026-10-27 from the project's result files
+ML Project Report · generated 2026-10-30 from the project's result files
 
 **Author:** Balasudhan R (RA2411003012164)
 
@@ -22,8 +22,8 @@ system: a top camera image of a conveyor is analysed by a **YOLO11** detector th
 defect masks to millimetres, and configurable quality rules that decide **PASS, REWORK or SCRAP**.
 Results are served through a **FastAPI** backend, shown on a **Streamlit** dashboard and stored in
 **SQLite**. On 150 held-out test frames (307 devices) the selected pipeline
-(YOLO11n + YOLO11n-seg) reaches a decision accuracy of **0.886** (macro F1
-0.877) at 100 ms per frame on a CPU; the detector reaches
+(YOLO11n + YOLO11n-seg) reaches a decision accuracy of **0.951** (macro F1
+0.940) at 159 ms per frame on a CPU; the detector reaches
 box mAP50 0.995.
 
 ## 1. Introduction
@@ -120,19 +120,34 @@ YOLO11n-seg initialised from COCO-pretrained weights, trained on 256 × 256 devi
 labels for the 5 defect classes (instance segmentation: each defect gets its own mask, class and
 confidence). Training crops are randomly shifted/scaled by a few percent to imitate detector box errors.
 
-### 7.3 Defect segmentation — U-Net
+### 7.3 Second training stage for YOLO11n-seg (more effective training)
+The first run stopped after 25 epochs while the validation mask mAP was still rising, and the weakest
+classes were the thin and small ones (scratch, missing pin). Instead of restarting from COCO weights, a
+second stage (`python run_project.py finetune-yoloseg`) **warm-starts from the stage-1 model** and:
+
+1. **oversamples** training crops that contain a scratch (×3) or a missing pin (×2), so the rare, hard
+   classes are seen more often (class balancing through a repeated image list);
+2. uses a **lower learning rate with cosine decay** (AdamW, lr 0.002 → 0.0001, 1 warm-up epoch), the usual
+   recipe for refining a converged model rather than relearning it;
+3. adds vertical flips and ±15° rotations, halves mosaic and **switches mosaic off for the last 8 epochs**,
+   so the final epochs see whole, realistic crops.
+
+The stage-2 model replaces stage 1 **only if** the decision macro F1 on the **validation** split
+(with re-tuned thresholds) improves; the test split is still used once, for the comparison in 9.6.
+
+### 7.4 Defect segmentation — U-Net
 A U-Net (4 down-sampling levels, base width 16, BatchNorm) written in PyTorch, predicting
 a 6-class map (background + 5 defects). Loss: class-weighted cross-entropy + soft Dice (background is
 ~99 % of pixels). To make CPU training feasible it is trained on 128 × 128 patches (70 % centred on a
 defect) and applied fully-convolutionally to the 256 × 256 crops; connected components of each class
 become individual defects.
 
-### 7.4 Measurement
+### 7.5 Measurement
 For every defect mask: area = pixels × (camera px per crop px)² / (12 px/mm)²; length = long side of the
 minimum-area rotated rectangle. Defects whose mask lies mostly outside the device box (a neighbouring
 device inside the padded crop) are discarded.
 
-### 7.5 Post-processing thresholds (tuned on the validation split)
+### 7.6 Post-processing thresholds (tuned on the validation split)
 Both segmenters use the same post-processing: a predicted defect is kept only if its confidence (YOLO
 score, or mean U-Net class probability over the component) and its size (crop pixels) reach a
 threshold. These two values were chosen per model by a grid search (confidence 0.1–0.9, minimum size
@@ -141,10 +156,10 @@ only once, afterwards.
 
 | Segmenter | Confidence ≥ | Min. size (px) | Val. macro F1 (tuned) | Val. macro F1 (default 0.2 / 6 px) |
 |---|---|---|---|---|
-| YOLO11n-seg | 0.1 | 6 | 0.847 | 0.828 |
+| YOLO11n-seg | 0.1 | 6 | 0.882 | 0.841 |
 | U-Net | 0.6 | 100 | 0.812 | 0.426 |
 
-### 7.6 Quality rules (`configs/quality_rules.yaml`)
+### 7.7 Quality rules (`configs/quality_rules.yaml`)
 
 | Defect | Condition | Verdict | Reason |
 |---|---|---|---|
@@ -175,6 +190,7 @@ The same rules applied to the exact ground-truth masks give the ground-truth dec
 |---|---|---|---|---|---|
 | YOLO11n | device detection | 10 / 10 | 8 | 16.6 min | box mAP50-95 0.995 |
 | YOLO11n-seg | defect segmentation | 25 / 25 | 23 | 38.4 min | mask mAP50 0.643 |
+| YOLO11n-seg, stage 2 (Section 7.3) | defect segmentation | 40 / 40 | — | 179.8 min | mask mAP50 0.753 (stage 1: 0.662) |
 | U-Net (1,942,662 params) | defect segmentation | 30 / 30 | 29 | 29.3 min | defect mIoU 0.389 |
 
 ![Detector training](../results/graphs/detector_training_curves.png)
@@ -190,26 +206,26 @@ YOLO11n on 150 test frames: precision **1.000**, recall **1.000**,
 mAP50 **0.995**, mAP50-95 **0.995**.
 
 ### 9.2 Defect segmentation
-YOLO11n-seg instance-segmentation metrics on the test crops: mask precision 0.742, recall 0.664, mask mAP50 **0.678**, mask mAP50-95 0.365.
+YOLO11n-seg instance-segmentation metrics on the test crops: mask precision 0.783, recall 0.742, mask mAP50 **0.737**, mask mAP50-95 0.417.
 
 | Defect | mask mAP50 | mask mAP50-95 |
 |---|---|---|
-| crack | 0.926 | 0.446 |
-| scratch | 0.251 | 0.112 |
-| contamination | 0.926 | 0.671 |
-| chip | 0.941 | 0.489 |
-| missing_pin | 0.348 | 0.109 |
+| crack | 0.905 | 0.442 |
+| scratch | 0.341 | 0.138 |
+| contamination | 0.943 | 0.691 |
+| chip | 0.953 | 0.588 |
+| missing_pin | 0.541 | 0.224 |
 
 Pixel-level IoU and Dice on all 307 test crops (same metric for both models):
 
 | Defect | YOLO11n-seg IoU | YOLO11n-seg Dice | U-Net IoU | U-Net Dice |
 |---|---|---|---|---|
-| crack | 0.714 | 0.833 | 0.606 | 0.755 |
-| scratch | 0.469 | 0.639 | 0.475 | 0.644 |
-| contamination | 0.908 | 0.952 | 0.892 | 0.943 |
-| chip | 0.795 | 0.886 | 0.367 | 0.537 |
-| missing_pin | 0.166 | 0.285 | 0.092 | 0.168 |
-| **mean** | **0.610** | **0.719** | **0.486** | **0.609** |
+| crack | 0.734 | 0.847 | 0.606 | 0.755 |
+| scratch | 0.509 | 0.675 | 0.475 | 0.644 |
+| contamination | 0.911 | 0.953 | 0.892 | 0.943 |
+| chip | 0.786 | 0.880 | 0.367 | 0.537 |
+| missing_pin | 0.458 | 0.629 | 0.092 | 0.168 |
+| **mean** | **0.680** | **0.797** | **0.486** | **0.609** |
 
 ![IoU per class](../results/graphs/segmentation_iou_per_class.png)
 
@@ -220,8 +236,8 @@ device counts as an error.
 
 | Pipeline (detector + segmenter) | Decision accuracy | Decision macro F1 | Scrap escapes (SCRAP→PASS) | False scrap (PASS→SCRAP) | Missed devices | Latency / frame (CPU) |
 |---|---|---|---|---|---|---|
-| YOLO11n + YOLO11n-seg | 0.886 | 0.877 | 5.0 % | 9.1 % | 0 / 307 | 100 ms |
-| YOLO11n + U-Net | 0.827 | 0.818 | 9.2 % | 12.1 % | 0 / 307 | 221 ms |
+| YOLO11n + YOLO11n-seg | 0.951 | 0.940 | 1.7 % | 0.8 % | 0 / 307 | 159 ms |
+| YOLO11n + U-Net | 0.827 | 0.818 | 9.2 % | 12.1 % | 0 / 307 | 351 ms |
 
 ![Segmenter comparison](../results/graphs/segmenter_comparison.png)
 
@@ -229,9 +245,9 @@ Confusion matrix of the selected pipeline (YOLO11n + YOLO11n-seg):
 
 | True \ Predicted | PASS | REWORK | SCRAP | MISSED |
 |---|---|---|---|---|
-| **PASS** | 120 | 0 | 12 | 0 |
-| **REWORK** | 4 | 46 | 6 | 0 |
-| **SCRAP** | 6 | 7 | 106 | 0 |
+| **PASS** | 130 | 1 | 1 | 0 |
+| **REWORK** | 4 | 50 | 2 | 0 |
+| **SCRAP** | 2 | 5 | 112 | 0 |
 
 ![Decision confusion matrices](../results/graphs/decision_confusion_matrices.png)
 
@@ -239,30 +255,51 @@ Per-decision results (YOLO11n-seg):
 
 | Decision | Precision | Recall | F1 | Devices |
 |---|---|---|---|---|
-| PASS | 0.923 | 0.909 | 0.916 | 132 |
-| REWORK | 0.868 | 0.821 | 0.844 | 56 |
-| SCRAP | 0.855 | 0.891 | 0.872 | 119 |
+| PASS | 0.956 | 0.985 | 0.970 | 132 |
+| REWORK | 0.893 | 0.893 | 0.893 | 56 |
+| SCRAP | 0.974 | 0.941 | 0.957 | 119 |
 
 ### 9.4 Defect-type recognition
 For each matched device: is every *significant* (non-PASS) defect type found?
 
 | Significant defect type | Devices | YOLO11n-seg recall | YOLO11n-seg precision | U-Net recall | U-Net precision |
 |---|---|---|---|---|---|
-| crack | 27 | 0.963 | 0.963 | 0.963 | 0.703 |
-| scratch | 75 | 0.707 | 1.000 | 0.827 | 1.000 |
-| contamination | 82 | 1.000 | 0.953 | 1.000 | 0.976 |
-| chip | 28 | 1.000 | 0.933 | 0.571 | 0.696 |
-| missing_pin | 19 | 0.842 | 0.372 | 0.526 | 0.323 |
+| crack | 27 | 1.000 | 1.000 | 0.963 | 0.703 |
+| scratch | 75 | 0.853 | 1.000 | 0.827 | 1.000 |
+| contamination | 82 | 0.988 | 0.953 | 1.000 | 0.976 |
+| chip | 28 | 0.964 | 0.964 | 0.571 | 0.696 |
+| missing_pin | 19 | 0.895 | 0.895 | 0.526 | 0.323 |
 
 ### 9.5 Example outputs
 
 ![Example 1](../results/predictions/yolo_test_00.png)
 ![Example 2](../results/predictions/yolo_test_01.png)
 
+### 9.6 Effect of the second training stage
+| Metric | Stage 1 (25 epochs from COCO) | Stage 2 (+ fine-tuning) |
+|---|---|---|
+| Validation decision macro F1 (adoption criterion) | 0.847 | **0.882** |
+| Test decision accuracy | 0.886 | **0.951** |
+| Test decision macro F1 | 0.877 | **0.940** |
+| Scrap escapes (SCRAP→PASS) | 5.0 % | **1.7 %** |
+| False scrap (PASS→SCRAP) | 9.1 % | **0.8 %** |
+| Mask mAP50 (test crops) | 0.678 | **0.737** |
+| Mean pixel IoU | 0.610 | **0.680** |
+| scratch: pixel IoU | 0.469 | **0.509** |
+| scratch: type recall / precision | 0.707 / 1.000 | **0.853 / 1.000** |
+| missing_pin: pixel IoU | 0.166 | **0.458** |
+| missing_pin: type recall / precision | 0.842 / 0.372 | **0.895 / 0.895** |
+| Web demo (ONNX) test decision accuracy | 0.879 | **0.961** |
+
+The second stage was adopted because it improved the validation macro F1. On the untouched test split it
+mostly fixes the classes it targeted: missing-pin segmentation IoU almost tripled and missing-pin false
+alarms (low precision in stage 1, which scrapped good devices) largely disappeared, so the false-scrap
+rate dropped sharply. The ONNX model in the web demo was re-exported from the stage-2 weights.
+
 ## 10. Model Comparison and Selection
 
 Selection criterion: highest end-to-end decision macro F1 on the test split (ties: accuracy, then speed).
-**Selected: YOLO11n + YOLO11n-seg.** YOLO11n-seg gives the highest end-to-end decision macro F1 (0.8775, accuracy 0.8860) vs U-Net (0.8178).
+**Selected: YOLO11n + YOLO11n-seg.** YOLO11n-seg gives the highest end-to-end decision macro F1 (0.9401, accuracy 0.9511) vs U-Net (0.8178).
 
 ## 11. Application
 
@@ -368,12 +405,50 @@ Fusion gets 5.0 percentage points more of the
 held-out decisions right and rejects fewer good parts. The confidence intervals still overlap, so with 60 held-out
 images this is a consistent improvement rather than a statistically proven one. The remaining weakness is
 **bent leads**: they are flagged as defective but YOLO11-seg rarely names the type, so they get SCRAP
-(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples.
+(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples
+(addressed in 12.6).
 
 ### 12.5 Uncertainty of the real-image results
 Held-out PatchCore image AUROC 0.922 has a 95 % CI of
 0.845 – 0.980. Every real-image number in this section comes from 100 test images (40 defective),
 so differences of a few percentage points are within noise.
+
+
+### 12.6 Upgrade: a dedicated defect-type classifier
+Once a part is flagged, only its defect **type** is still needed, and MVTec labels are per image. Learning
+to *segment* a thin bent lead from 8 examples per fold is hard; *classifying* the image is an easier
+problem. Two classifiers were fine-tuned from ImageNet YOLO11s-cls (224 px, 40 epochs,
+AdamW) with the **same 5 stratified folds** as 12.2, so every prediction is out-of-fold:
+
+- **full** — the whole photo;
+- **crop** — a square of 40 % of the image side centred on PatchCore's hottest
+  point, so the classifier looks at the defect itself (the anomaly detector *guides* the classifier).
+
+The detection rule is the score fusion of 12.4; the variant was chosen on the calibration split.
+
+| Type source | Type accuracy (40 defects, OOF) | bent lead | cut lead | damaged case | misplaced | Calib. macro F1 | Held-out accuracy (95 % CI) | Held-out macro F1 |
+|---|---|---|---|---|---|---|---|---|
+| YOLO11-seg top detection (12.4) | 70.0 % | 30.0 % | 80.0 % | 100.0 % | 70.0 % | 0.849 | 81.7 % (71.7 % – 91.7 %) | 0.750 |
+| YOLO11s-cls on the whole photo | 75.0 % | 50.0 % | 90.0 % | 80.0 % | 80.0 % | 0.849 | 81.7 % (71.7 % – 91.7 %) | 0.753 |
+| **YOLO11s-cls on a PatchCore-guided crop** | 82.5 % | 60.0 % | 100.0 % | 90.0 % | 80.0 % | 0.934 | 86.7 % (76.7 % – 95.0 %) | 0.838 |
+
+Confusion matrix with the chosen type source (held-out, rows = truth):
+
+| True \ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+| **PASS** | 33 | 0 | 3 |
+| **REWORK** | 1 | 9 | 2 |
+| **SCRAP** | 2 | 0 | 10 |
+
+The PatchCore-guided crop raises defect-type accuracy from 70.0 % to
+82.5 % and bent-lead accuracy from 30.0 % to
+60.0 %; the held-out PASS / REWORK / SCRAP accuracy rises from
+81.7 % to **86.7 %** (macro F1 0.750 →
+0.838). Detection (defect or not) is unchanged, so the gain comes entirely from naming
+the type correctly. The intervals still overlap: it is a clear but not statistically proven gain.
+Caveat: the few *good* parts wrongly flagged keep their YOLO11-seg type in this evaluation (the classifier
+was trained on defective images only); they are counted as errors either way. The web demo uses a final
+classifier trained on all defective test images except the demo images (`models/transistor_type_cls_yolo11s.pt`).
 
 
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works
@@ -385,21 +460,21 @@ production line faces, which is why the label-free anomaly detector is valuable 
 
 - **Detection is essentially solved** on this data (mAP50 0.995): ICs are high-contrast,
   rigid objects. The difficulty of the task lies in the *defects*.
-- **Hardest / easiest defect classes:** YOLO11n-seg: hardest missing_pin (IoU 0.166), easiest contamination (IoU 0.908), U-Net: hardest missing_pin (IoU 0.092), easiest contamination (IoU 0.892).
+- **Hardest / easiest defect classes:** YOLO11n-seg: hardest missing_pin (IoU 0.458), easiest contamination (IoU 0.911), U-Net: hardest missing_pin (IoU 0.092), easiest contamination (IoU 0.892).
   Thin structures (scratches, cracks: 1–3 px wide) give low IoU even when correctly found, because a
   one-pixel offset already removes a large part of the overlap — the defect-type recall in 9.4 is the
   more meaningful measure for them.
 - **Why YOLO11-seg wins:** it is pretrained (COCO) and predicts *instances* with a confidence each, so a
   defect is either reported whole or not at all. The U-Net predicts every pixel independently; without
   filtering, stray pixels form small fake "cracks" and "missing pins" that scrap good devices — the
-  validation-tuned size/confidence filter (Section 7.5) removes most of them, but some real small defects
+  validation-tuned size/confidence filter (Section 7.6) removes most of them, but some real small defects
   are removed with them. The U-Net was also trained from scratch on a CPU budget and was still improving
   when training stopped (Section 8), so more training would narrow the gap.
-- **Decision errors** of the selected pipeline: 12 × PASS predicted as SCRAP; 7 × SCRAP predicted as REWORK; 6 × SCRAP predicted as PASS; 6 × REWORK predicted as SCRAP; 4 × REWORK predicted as PASS. Most errors occur near a rule threshold
+- **Decision errors** of the selected pipeline: 5 × SCRAP predicted as REWORK; 4 × REWORK predicted as PASS; 2 × SCRAP predicted as PASS; 2 × REWORK predicted as SCRAP; 1 × PASS predicted as SCRAP. Most errors occur near a rule threshold
   (e.g. a scratch of ≈ 1.5 mm or ≈ 4 mm, contamination of ≈ 0.5 mm² or ≈ 3 mm²), where a small
   measurement error flips the verdict.
 - **Safety-relevant metric:** the scrap-escape rate (a SCRAP device predicted as PASS) is
-  5.0 %; the false-scrap rate (good device scrapped) is 9.1 %.
+  1.7 %; the false-scrap rate (good device scrapped) is 0.8 %.
   In production the rule limits can be tightened to trade more false scrap for fewer escapes.
 
 ## 14. Limitations
@@ -425,7 +500,7 @@ The project delivers a complete, working computer-vision quality-control system 
 devices: data generation with exact labels, a YOLO11 detector, two compared defect segmenters,
 measurement in millimetres, configurable PASS/REWORK/SCRAP rules, and a usable application layer
 (CLI, camera mode, FastAPI, Streamlit, SQLite). The selected pipeline (YOLO11n + YOLO11n-seg) makes the
-correct quality decision for 88.6 % of the 307 unseen test devices.
+correct quality decision for 95.1 % of the 307 unseen test devices.
 
 ## 17. References
 

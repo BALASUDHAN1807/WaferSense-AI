@@ -88,6 +88,35 @@ def tuning_table(ev) -> str:
     return "\n".join(rows)
 
 
+def stage_table(ev) -> str:
+    """Stage 1 vs stage 2 (second training stage) on the same test split."""
+    s1 = _j("evaluation_stage1.json")
+    if not s1 or "yolo" not in ev.get("end_to_end", {}):
+        return ""
+    a, b = s1["end_to_end"]["yolo"], ev["end_to_end"]["yolo"]
+    ta, tb = s1["tuned_thresholds"]["yolo"], ev["tuned_thresholds"]["yolo"]
+    pa, pb = s1["pixel"]["yolo"], ev["pixel"]["yolo"]
+    ma, mb = s1["yolo_seg_val"], ev["yolo_seg_val"]
+    rows = [("Validation decision macro F1 (adoption criterion)", f(ta["val_macro_f1"]), f(tb["val_macro_f1"])),
+            ("Test decision accuracy", f(a["decision_accuracy"]), f(b["decision_accuracy"])),
+            ("Test decision macro F1", f(a["decision_macro_f1"]), f(b["decision_macro_f1"])),
+            ("Scrap escapes (SCRAP→PASS)", pct(a["scrap_escape_rate"]), pct(b["scrap_escape_rate"])),
+            ("False scrap (PASS→SCRAP)", pct(a["false_scrap_rate"]), pct(b["false_scrap_rate"])),
+            ("Mask mAP50 (test crops)", f(ma["mask_mAP50"]), f(mb["mask_mAP50"])),
+            ("Mean pixel IoU", f(pa["mean_IoU"]), f(pb["mean_IoU"]))]
+    for c in ("scratch", "missing_pin"):
+        rows.append((f"{c}: pixel IoU", f(pa["per_class"][c]["IoU"]), f(pb["per_class"][c]["IoU"])))
+        ra, rb = a["defect_type_recognition"][c], b["defect_type_recognition"][c]
+        rows.append((f"{c}: type recall / precision", f"{f(ra['recall'])} / {f(ra['precision'])}",
+                     f"{f(rb['recall'])} / {f(rb['precision'])}"))
+    ft = _j("finetune_yoloseg.json") or {}
+    od = ft.get("onnx_deployed_test")
+    if od:
+        rows.append(("Web demo (ONNX) test decision accuracy", "0.879", f(od["decision_accuracy"])))
+    return ("| Metric | Stage 1 (25 epochs from COCO) | Stage 2 (+ fine-tuning) |\n|---|---|---|\n"
+            + "\n".join(f"| {m} | {x} | **{y}** |" for m, x, y in rows))
+
+
 def training_table() -> str:
     rows = ["| Model | Task | Epochs (run / max) | Best epoch | Training time | Best validation score |",
             "|---|---|---|---|---|---|"]
@@ -100,6 +129,11 @@ def training_table() -> str:
         rows.append(f"| YOLO11n-seg | defect segmentation | {y['epochs_completed']} / {y['epochs_configured']} | "
                     f"{y['best_epoch']} | {y['training_time_seconds'] / 60:.1f} min | mask mAP50 "
                     f"{f(y['best_val'].get('mAP50(M)'))} |")
+    ft = _j("finetune_yoloseg.json")
+    if ft:
+        rows.append(f"| YOLO11n-seg, stage 2 (Section 7.3) | defect segmentation | {ft['epochs_completed']} / "
+                    f"{ft['epochs_completed']} | — | {ft['training_time_seconds'] / 60:.1f} min | mask mAP50 "
+                    f"{f(ft['val_mask_mAP50_stage2_best'])} (stage 1: {f(ft['val_mask_mAP50_stage1_best'])}) |")
     if u:
         rows.append(f"| U-Net ({u['parameters']:,} params) | defect segmentation | {u['epochs_completed']} / "
                     f"{u['epochs_configured']} | {u['best_epoch']} | {u['training_time_seconds'] / 60:.1f} min | "
@@ -118,6 +152,9 @@ def readme_block(ev) -> str:
         f"mAP50 {f(det['mAP50'])}, mAP50-95 {f(det['mAP50_95'])}\n",
         "**End-to-end quality decision (PASS / REWORK / SCRAP):**\n", headline_table(ev), "",
         "**Defect segmentation (pixel IoU / Dice on test crops):**\n", iou_table(ev), "",
+        *(["**Second training stage** (`python run_project.py finetune-yoloseg`: warm start, scratch / "
+           "missing-pin oversampling, cosine LR; adopted on validation macro F1). Same test split:\n",
+           stage_table(ev), ""] if stage_table(ev) else []),
         f"**Selected pipeline: YOLO11n + {b['segmenter_name']}** — {b['reason']}\n",
         "![Decision confusion matrices](results/graphs/decision_confusion_matrices.png)",
     ]
@@ -137,6 +174,12 @@ def readme_real_block(real: dict) -> str:
         lines.append(f"| Upgrade: score fusion (PatchCore OR YOLO11-seg) | PASS-REWORK-SCRAP acc. (95 % CI) / false-reject rate | "
                      f"**{pct(z['heldout']['accuracy'])}** ({pct(z['ci95']['accuracy'][0])} – {pct(z['ci95']['accuracy'][1])}) / "
                      f"{pct(z['heldout']['false_reject_rate'])} |")
+    tc = real.get("type_classifier")
+    if tc and tc.get("chosen") in tc.get("variants", {}):
+        v = tc["variants"][tc["chosen"]]
+        lines.append(f"| Upgrade: defect-type classifier (YOLO11s-cls, {tc['chosen']}) | defect-type acc. / "
+                     f"PASS-REWORK-SCRAP acc. (95 % CI) | {pct(v['type_accuracy_oof'])} / **{pct(v['heldout']['accuracy'])}** "
+                     f"({pct(v['ci95']['accuracy'][0])} – {pct(v['ci95']['accuracy'][1])}) |")
     for k, v in (real.get("supervised") or {}).items():
         lines.append(f"| YOLO11n-seg, {INIT_NAMES.get(k, k)} (5-fold CV) | mask mAP50 / defect-type acc. / "
                      f"PASS-REWORK-SCRAP acc. | {f(v['mean_mask_mAP50'])} / {pct(v['defect_type_accuracy_oof'])} / "
@@ -322,19 +365,34 @@ YOLO11n-seg initialised from COCO-pretrained weights, trained on 256 × 256 devi
 labels for the 5 defect classes (instance segmentation: each defect gets its own mask, class and
 confidence). Training crops are randomly shifted/scaled by a few percent to imitate detector box errors.
 
-### 7.3 Defect segmentation — U-Net
+### 7.3 Second training stage for YOLO11n-seg (more effective training)
+The first run stopped after 25 epochs while the validation mask mAP was still rising, and the weakest
+classes were the thin and small ones (scratch, missing pin). Instead of restarting from COCO weights, a
+second stage (`python run_project.py finetune-yoloseg`) **warm-starts from the stage-1 model** and:
+
+1. **oversamples** training crops that contain a scratch (×3) or a missing pin (×2), so the rare, hard
+   classes are seen more often (class balancing through a repeated image list);
+2. uses a **lower learning rate with cosine decay** (AdamW, lr 0.002 → 0.0001, 1 warm-up epoch), the usual
+   recipe for refining a converged model rather than relearning it;
+3. adds vertical flips and ±15° rotations, halves mosaic and **switches mosaic off for the last 8 epochs**,
+   so the final epochs see whole, realistic crops.
+
+The stage-2 model replaces stage 1 **only if** the decision macro F1 on the **validation** split
+(with re-tuned thresholds) improves; the test split is still used once, for the comparison in 9.6.
+
+### 7.4 Defect segmentation — U-Net
 A U-Net (4 down-sampling levels, base width {C.UNET['base_channels']}, BatchNorm) written in PyTorch, predicting
 a 6-class map (background + 5 defects). Loss: class-weighted cross-entropy + soft Dice (background is
 ~99 % of pixels). To make CPU training feasible it is trained on 128 × 128 patches (70 % centred on a
 defect) and applied fully-convolutionally to the 256 × 256 crops; connected components of each class
 become individual defects.
 
-### 7.4 Measurement
+### 7.5 Measurement
 For every defect mask: area = pixels × (camera px per crop px)² / ({C.PX_PER_MM:g} px/mm)²; length = long side of the
 minimum-area rotated rectangle. Defects whose mask lies mostly outside the device box (a neighbouring
 device inside the padded crop) are discarded.
 
-### 7.5 Post-processing thresholds (tuned on the validation split)
+### 7.6 Post-processing thresholds (tuned on the validation split)
 Both segmenters use the same post-processing: a predicted defect is kept only if its confidence (YOLO
 score, or mean U-Net class probability over the component) and its size (crop pixels) reach a
 threshold. These two values were chosen per model by a grid search (confidence {C.TUNE_SEG_CONF[0]}–{C.TUNE_SEG_CONF[-1]}, minimum size
@@ -343,7 +401,7 @@ only once, afterwards.
 
 {tuning_table(ev)}
 
-### 7.6 Quality rules (`configs/quality_rules.yaml`)
+### 7.7 Quality rules (`configs/quality_rules.yaml`)
 
 | Defect | Condition | Verdict | Reason |
 |---|---|---|---|
@@ -414,6 +472,14 @@ For each matched device: is every *significant* (non-PASS) defect type found?
 ![Example 1](../results/predictions/{b['segmenter']}_test_00.png)
 ![Example 2](../results/predictions/{b['segmenter']}_test_01.png)
 
+### 9.6 Effect of the second training stage
+{stage_table(ev) or "Stage-1 results not available."}
+
+The second stage was adopted because it improved the validation macro F1. On the untouched test split it
+mostly fixes the classes it targeted: missing-pin segmentation IoU almost tripled and missing-pin false
+alarms (low precision in stage 1, which scrapped good devices) largely disappeared, so the false-scrap
+rate dropped sharply. The ONNX model in the web demo was re-exported from the stage-2 weights.
+
 ## 10. Model Comparison and Selection
 
 Selection criterion: highest end-to-end decision macro F1 on the test split (ties: accuracy, then speed).
@@ -443,7 +509,7 @@ Selection criterion: highest end-to-end decision macro F1 on the test split (tie
 - **Why YOLO11-seg wins:** it is pretrained (COCO) and predicts *instances* with a confidence each, so a
   defect is either reported whole or not at all. The U-Net predicts every pixel independently; without
   filtering, stray pixels form small fake "cracks" and "missing pins" that scrap good devices — the
-  validation-tuned size/confidence filter (Section 7.5) removes most of them, but some real small defects
+  validation-tuned size/confidence filter (Section 7.6) removes most of them, but some real small defects
   are removed with them. The U-Net was also trained from scratch on a CPU budget and was still improving
   when training stopped (Section 8), so more training would narrow the gap.
 - **Decision errors** of the selected pipeline: {err_text}. Most errors occur near a rule threshold
@@ -623,12 +689,61 @@ Fusion gets {100 * (fz['heldout']['accuracy'] - po['heldout']['accuracy']):.1f} 
 held-out decisions right and rejects fewer good parts. The confidence intervals still overlap, so with 60 held-out
 images this is a consistent improvement rather than a statistically proven one. The remaining weakness is
 **bent leads**: they are flagged as defective but YOLO11-seg rarely names the type, so they get SCRAP
-(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples.
+(unknown) instead of REWORK — the thin lead is the hardest defect to segment from 10 examples
+(addressed in 12.6).
 
 ### 12.5 Uncertainty of the real-image results
 Held-out PatchCore image AUROC {f(real['patchcore']['image_AUROC_heldout'])} has a 95 % CI of
 {f(lo)} – {f(hi)}. Every real-image number in this section comes from 100 test images (40 defective),
 so differences of a few percentage points are within noise.
+""")
+    tc = real.get("type_classifier")
+    if tc:
+        V = tc["variants"]
+        label = {"yolo_seg": "YOLO11-seg top detection (12.4)", "full": "YOLO11s-cls on the whole photo",
+                 "crop": "YOLO11s-cls on a PatchCore-guided crop"}
+        types = list(next(iter(V.values()))["per_type_accuracy_oof"])
+        rows = "\n".join(
+            f"| {'**' + label.get(k, k) + '**' if k == tc['chosen'] else label.get(k, k)} | {pct(v['type_accuracy_oof'])} | "
+            + " | ".join(pct(v['per_type_accuracy_oof'][t]) for t in types)
+            + f" | {f(v['calibration_macro_f1'])} | {pct(v['heldout']['accuracy'])} ({pct(v['ci95']['accuracy'][0])} – "
+              f"{pct(v['ci95']['accuracy'][1])}) | {f(v['heldout']['macro_f1'])} |" for k, v in V.items())
+        ch = V[tc["chosen"]]
+        cm_md = "\n".join(f"| **{l}** | " + " | ".join(str(x) for x in r) + " |"
+                          for l, r in zip(ch["confusion_matrix"]["labels"], ch["confusion_matrix"]["matrix"]))
+        base = V["yolo_seg"]
+        out.append(f"""
+### 12.6 Upgrade: a dedicated defect-type classifier
+Once a part is flagged, only its defect **type** is still needed, and MVTec labels are per image. Learning
+to *segment* a thin bent lead from 8 examples per fold is hard; *classifying* the image is an easier
+problem. Two classifiers were fine-tuned from ImageNet YOLO11s-cls ({tc['imgsz']} px, {tc['epochs']} epochs,
+AdamW) with the **same 5 stratified folds** as 12.2, so every prediction is out-of-fold:
+
+- **full** — the whole photo;
+- **crop** — a square of {int(100 * tc['crop_fraction'])} % of the image side centred on PatchCore's hottest
+  point, so the classifier looks at the defect itself (the anomaly detector *guides* the classifier).
+
+The detection rule is the score fusion of 12.4; the variant was chosen on the calibration split.
+
+| Type source | Type accuracy (40 defects, OOF) | {' | '.join(t.replace('_', ' ') for t in types)} | Calib. macro F1 | Held-out accuracy (95 % CI) | Held-out macro F1 |
+|---|---|{'---|' * len(types)}---|---|---|
+{rows}
+
+Confusion matrix with the chosen type source (held-out, rows = truth):
+
+| True \\ Predicted | PASS | REWORK | SCRAP |
+|---|---|---|---|
+{cm_md}
+
+The PatchCore-guided crop raises defect-type accuracy from {pct(base['type_accuracy_oof'])} to
+{pct(ch['type_accuracy_oof'])} and bent-lead accuracy from {pct(base['per_type_accuracy_oof']['bent_lead'])} to
+{pct(ch['per_type_accuracy_oof']['bent_lead'])}; the held-out PASS / REWORK / SCRAP accuracy rises from
+{pct(base['heldout']['accuracy'])} to **{pct(ch['heldout']['accuracy'])}** (macro F1 {f(base['heldout']['macro_f1'])} →
+{f(ch['heldout']['macro_f1'])}). Detection (defect or not) is unchanged, so the gain comes entirely from naming
+the type correctly. The intervals still overlap: it is a clear but not statistically proven gain.
+Caveat: the few *good* parts wrongly flagged keep their YOLO11-seg type in this evaluation (the classifier
+was trained on defective images only); they are counted as errors either way. The web demo uses a final
+classifier trained on all defective test images except the demo images (`models/transistor_type_cls_yolo11s.pt`).
 """)
     out.append("""
 **What this shows:** the same pipeline design (detect anomalies → identify defect type → apply rules) works

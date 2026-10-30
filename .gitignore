@@ -43,3 +43,6 @@ results/large/runs/
 # fine-tune lists and classifier CV crops (regenerated)
 dataset/defects/train_balanced.txt
 dataset/defects/data_balanced.yaml
+models/segmenter_yolo11n_seg_ft.pt
+models/segmenter_yolo11n_seg.onnx
+models/transistor_type_cls_yolo11s.onnx

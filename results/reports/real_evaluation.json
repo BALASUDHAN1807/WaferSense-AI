@@ -280,5 +280,191 @@
       0.8454163997388799,
       0.9804639804639804
     ]
+  },
+  "type_classifier": {
+    "description": "Defect type for real transistors: YOLO11-seg (top detection) vs YOLO11s-cls on the full photo or on a PatchCore-guided crop; out-of-fold, 5 stratified folds; detection = score fusion (report 12.4); variant chosen on the calibration split",
+    "epochs": 40,
+    "imgsz": 224,
+    "crop_fraction": 0.4,
+    "variants": {
+      "yolo_seg": {
+        "type_accuracy_oof": 0.7,
+        "per_type_accuracy_oof": {
+          "bent_lead": 0.3,
+          "cut_lead": 0.8,
+          "damaged_case": 1.0,
+          "misplaced": 0.7
+        },
+        "calibration_macro_f1": 0.8493180578286962,
+        "heldout": {
+          "accuracy": 0.8166666666666667,
+          "macro_f1": 0.75,
+          "defect_recall": 0.875,
+          "false_reject_rate": 0.08333333333333333
+        },
+        "ci95": {
+          "accuracy": [
+            0.7166666666666667,
+            0.9166666666666666
+          ],
+          "macro_f1": [
+            0.6070014483065955,
+            0.8766494570722511
+          ],
+          "defect_recall": [
+            0.7367543859649123,
+            1.0
+          ],
+          "false_reject_rate": [
+            0.0,
+            0.19444444444444445
+          ]
+        },
+        "training_time_seconds": null,
+        "confusion_matrix": {
+          "labels": [
+            "PASS",
+            "REWORK",
+            "SCRAP"
+          ],
+          "matrix": [
+            [
+              33,
+              0,
+              3
+            ],
+            [
+              1,
+              6,
+              5
+            ],
+            [
+              2,
+              0,
+              10
+            ]
+          ]
+        }
+      },
+      "full": {
+        "type_accuracy_oof": 0.75,
+        "per_type_accuracy_oof": {
+          "bent_lead": 0.5,
+          "cut_lead": 0.9,
+          "damaged_case": 0.8,
+          "misplaced": 0.8
+        },
+        "calibration_macro_f1": 0.8493180578286962,
+        "heldout": {
+          "accuracy": 0.8166666666666667,
+          "macro_f1": 0.7531080031080032,
+          "defect_recall": 0.875,
+          "false_reject_rate": 0.08333333333333333
+        },
+        "ci95": {
+          "accuracy": [
+            0.7166666666666667,
+            0.9166666666666666
+          ],
+          "macro_f1": [
+            0.6154636957129811,
+            0.8728324156620729
+          ],
+          "defect_recall": [
+            0.7367543859649123,
+            1.0
+          ],
+          "false_reject_rate": [
+            0.0,
+            0.19444444444444445
+          ]
+        },
+        "training_time_seconds": 841.9,
+        "confusion_matrix": {
+          "labels": [
+            "PASS",
+            "REWORK",
+            "SCRAP"
+          ],
+          "matrix": [
+            [
+              33,
+              0,
+              3
+            ],
+            [
+              1,
+              8,
+              3
+            ],
+            [
+              2,
+              2,
+              8
+            ]
+          ]
+        }
+      },
+      "crop": {
+        "type_accuracy_oof": 0.825,
+        "per_type_accuracy_oof": {
+          "bent_lead": 0.6,
+          "cut_lead": 1.0,
+          "damaged_case": 0.9,
+          "misplaced": 0.8
+        },
+        "calibration_macro_f1": 0.9336485421591805,
+        "heldout": {
+          "accuracy": 0.8666666666666667,
+          "macro_f1": 0.8381834215167547,
+          "defect_recall": 0.875,
+          "false_reject_rate": 0.08333333333333333
+        },
+        "ci95": {
+          "accuracy": [
+            0.7666666666666667,
+            0.95
+          ],
+          "macro_f1": [
+            0.7108968856524767,
+            0.9378577713136534
+          ],
+          "defect_recall": [
+            0.7367543859649123,
+            1.0
+          ],
+          "false_reject_rate": [
+            0.0,
+            0.19444444444444445
+          ]
+        },
+        "training_time_seconds": 873.6,
+        "confusion_matrix": {
+          "labels": [
+            "PASS",
+            "REWORK",
+            "SCRAP"
+          ],
+          "matrix": [
+            [
+              33,
+              0,
+              3
+            ],
+            [
+              1,
+              9,
+              2
+            ],
+            [
+              2,
+              0,
+              10
+            ]
+          ]
+        }
+      }
+    },
+    "chosen": "crop"
   }
 }

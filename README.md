@@ -55,21 +55,38 @@ Measured on the held-out **test split** (150 camera frames, 307 devices), CPU on
 
 | Pipeline (detector + segmenter) | Decision accuracy | Decision macro F1 | Scrap escapes (SCRAP→PASS) | False scrap (PASS→SCRAP) | Missed devices | Latency / frame (CPU) |
 |---|---|---|---|---|---|---|
-| YOLO11n + YOLO11n-seg | 0.886 | 0.877 | 5.0 % | 9.1 % | 0 / 307 | 100 ms |
-| YOLO11n + U-Net | 0.827 | 0.818 | 9.2 % | 12.1 % | 0 / 307 | 221 ms |
+| YOLO11n + YOLO11n-seg | 0.951 | 0.940 | 1.7 % | 0.8 % | 0 / 307 | 159 ms |
+| YOLO11n + U-Net | 0.827 | 0.818 | 9.2 % | 12.1 % | 0 / 307 | 351 ms |
 
 **Defect segmentation (pixel IoU / Dice on test crops):**
 
 | Defect | YOLO11n-seg IoU | YOLO11n-seg Dice | U-Net IoU | U-Net Dice |
 |---|---|---|---|---|
-| crack | 0.714 | 0.833 | 0.606 | 0.755 |
-| scratch | 0.469 | 0.639 | 0.475 | 0.644 |
-| contamination | 0.908 | 0.952 | 0.892 | 0.943 |
-| chip | 0.795 | 0.886 | 0.367 | 0.537 |
-| missing_pin | 0.166 | 0.285 | 0.092 | 0.168 |
-| **mean** | **0.610** | **0.719** | **0.486** | **0.609** |
+| crack | 0.734 | 0.847 | 0.606 | 0.755 |
+| scratch | 0.509 | 0.675 | 0.475 | 0.644 |
+| contamination | 0.911 | 0.953 | 0.892 | 0.943 |
+| chip | 0.786 | 0.880 | 0.367 | 0.537 |
+| missing_pin | 0.458 | 0.629 | 0.092 | 0.168 |
+| **mean** | **0.680** | **0.797** | **0.486** | **0.609** |
 
-**Selected pipeline: YOLO11n + YOLO11n-seg** — YOLO11n-seg gives the highest end-to-end decision macro F1 (0.8775, accuracy 0.8860) vs U-Net (0.8178).
+**Second training stage** (`python run_project.py finetune-yoloseg`: warm start, scratch / missing-pin oversampling, cosine LR; adopted on validation macro F1). Same test split:
+
+| Metric | Stage 1 (25 epochs from COCO) | Stage 2 (+ fine-tuning) |
+|---|---|---|
+| Validation decision macro F1 (adoption criterion) | 0.847 | **0.882** |
+| Test decision accuracy | 0.886 | **0.951** |
+| Test decision macro F1 | 0.877 | **0.940** |
+| Scrap escapes (SCRAP→PASS) | 5.0 % | **1.7 %** |
+| False scrap (PASS→SCRAP) | 9.1 % | **0.8 %** |
+| Mask mAP50 (test crops) | 0.678 | **0.737** |
+| Mean pixel IoU | 0.610 | **0.680** |
+| scratch: pixel IoU | 0.469 | **0.509** |
+| scratch: type recall / precision | 0.707 / 1.000 | **0.853 / 1.000** |
+| missing_pin: pixel IoU | 0.166 | **0.458** |
+| missing_pin: type recall / precision | 0.842 / 0.372 | **0.895 / 0.895** |
+| Web demo (ONNX) test decision accuracy | 0.879 | **0.961** |
+
+**Selected pipeline: YOLO11n + YOLO11n-seg** — YOLO11n-seg gives the highest end-to-end decision macro F1 (0.9401, accuracy 0.9511) vs U-Net (0.8178).
 
 ![Decision confusion matrices](results/graphs/decision_confusion_matrices.png)
 <!-- RESULTS:END -->
@@ -83,6 +100,7 @@ Measured on the held-out **test split** (150 camera frames, 307 devices), CPU on
 | | pixel AUROC (localisation) | 0.842 |
 | | held-out accuracy / defect recall / false-reject rate | 85.0 % / 83.3 % / 13.9 % |
 | Upgrade: score fusion (PatchCore OR YOLO11-seg) | PASS-REWORK-SCRAP acc. (95 % CI) / false-reject rate | **81.7 %** (71.7 % – 91.7 %) / 8.3 % |
+| Upgrade: defect-type classifier (YOLO11s-cls, crop) | defect-type acc. / PASS-REWORK-SCRAP acc. (95 % CI) | 82.5 % / **86.7 %** (76.7 % – 95.0 %) |
 | YOLO11n-seg, pretrained on our synthetic IC data (5-fold CV) | mask mAP50 / defect-type acc. / PASS-REWORK-SCRAP acc. | 0.414 / 37.5 % / 73.3 % |
 | YOLO11n-seg, pretrained on COCO (generic) (5-fold CV) | mask mAP50 / defect-type acc. / PASS-REWORK-SCRAP acc. | 0.590 / 70.0 % / 76.7 % |
 

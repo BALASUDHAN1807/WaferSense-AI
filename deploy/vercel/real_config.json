@@ -15,6 +15,16 @@
     "conf": 0.1,
     "gate_conf": 0.2
   },
+  "type_cls": {
+    "img_size": 224,
+    "crop_fraction": 0.4,
+    "classes": [
+      "bent_lead",
+      "cut_lead",
+      "damaged_case",
+      "misplaced"
+    ]
+  },
   "rules": {
     "bent_lead": {
       "verdict": "REWORK",

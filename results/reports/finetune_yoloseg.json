@@ -1,0 +1,22 @@
+{
+  "stage": "fine-tune",
+  "warm_start": "models/segmenter_yolo11n_seg.pt",
+  "oversample": {
+    "scratch": 3,
+    "missing_pin": 2
+  },
+  "epochs_completed": 40,
+  "training_time_seconds": 10785.3,
+  "val_mask_mAP50_stage1_best": 0.6616,
+  "val_mask_mAP50_stage2_best": 0.75337,
+  "val_mask_mAP50_95_stage1_best": 0.37222,
+  "val_mask_mAP50_95_stage2_best": 0.40509,
+  "onnx_deployed_test": {
+    "devices": 307,
+    "decision_accuracy": 0.9609120521172638,
+    "decision_macro_f1": 0.9514198632173655,
+    "note": "deploy/vercel ONNX + numpy pipeline on the test split after the second stage (87.9 % before)"
+  },
+  "adopted": true,
+  "adoption_rule": "validation-split decision macro F1 (tuned thresholds) must improve; stage 1 0.8465 -> stage 2 0.8815"
+}

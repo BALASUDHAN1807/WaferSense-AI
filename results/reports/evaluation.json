@@ -11,31 +11,31 @@
     "unet"
   ],
   "yolo_seg_val": {
-    "mask_precision": 0.742049939723574,
-    "mask_recall": 0.6635390861888523,
-    "mask_mAP50": 0.6783994210083192,
-    "mask_mAP50_95": 0.3653436153697261,
-    "box_mAP50": 0.7046674956991239,
+    "mask_precision": 0.7827065542834898,
+    "mask_recall": 0.7418814375255156,
+    "mask_mAP50": 0.736533198171428,
+    "mask_mAP50_95": 0.4165609466276184,
+    "box_mAP50": 0.7958444038139943,
     "per_class": {
       "crack": {
-        "mask_mAP50": 0.9255982982534706,
-        "mask_mAP50_95": 0.44588134351682635
+        "mask_mAP50": 0.9052070877531341,
+        "mask_mAP50_95": 0.44233054639382213
       },
       "scratch": {
-        "mask_mAP50": 0.25107756461557884,
-        "mask_mAP50_95": 0.11197718984584906
+        "mask_mAP50": 0.34108225361823846,
+        "mask_mAP50_95": 0.1377005387464785
       },
       "contamination": {
-        "mask_mAP50": 0.9264886206452027,
-        "mask_mAP50_95": 0.6705777643305064
+        "mask_mAP50": 0.9429146641296542,
+        "mask_mAP50_95": 0.6910256157819499
       },
       "chip": {
-        "mask_mAP50": 0.9407699770541559,
-        "mask_mAP50_95": 0.4891709775316161
+        "mask_mAP50": 0.9526385244636517,
+        "mask_mAP50_95": 0.5877164919866973
       },
       "missing_pin": {
-        "mask_mAP50": 0.34806264447318797,
-        "mask_mAP50_95": 0.1091108016238325
+        "mask_mAP50": 0.5408234608924625,
+        "mask_mAP50_95": 0.22403154022914476
       }
     }
   },
@@ -43,14 +43,14 @@
     "yolo": {
       "seg_conf": 0.1,
       "min_pixels": 6,
-      "val_macro_f1": 0.8465032428742106,
-      "val_accuracy": 0.8518518518518519,
+      "val_macro_f1": 0.8815303067334718,
+      "val_accuracy": 0.8994708994708994,
       "val_devices": 189,
       "default_0.2_6": {
         "seg_conf": 0.2,
         "min_pixels": 6,
-        "val_macro_f1": 0.8278981284246346,
-        "val_accuracy": 0.8359788359788359
+        "val_macro_f1": 0.8411452724767253,
+        "val_accuracy": 0.8518518518518519
       }
     },
     "unet": {
@@ -71,30 +71,30 @@
     "yolo": {
       "per_class": {
         "crack": {
-          "IoU": 0.7135268450009485,
-          "Dice": 0.8328166519043402
+          "IoU": 0.7344119968429361,
+          "Dice": 0.8468714448236633
         },
         "scratch": {
-          "IoU": 0.46903200246511423,
-          "Dice": 0.6385592712453554
+          "IoU": 0.5092187292744396,
+          "Dice": 0.6748110388468975
         },
         "contamination": {
-          "IoU": 0.9075032540406474,
-          "Dice": 0.9515089970287507
+          "IoU": 0.9107622349564305,
+          "Dice": 0.9532972949689869
         },
         "chip": {
-          "IoU": 0.7953504755195492,
-          "Dice": 0.8860113792426918
+          "IoU": 0.7857334766254702,
+          "Dice": 0.8800120364101407
         },
         "missing_pin": {
-          "IoU": 0.16585932958728927,
-          "Dice": 0.28452717300980557
+          "IoU": 0.45848584087844346,
+          "Dice": 0.6287148329150707
         }
       },
-      "mean_IoU": 0.6102543813227097,
-      "mean_Dice": 0.7186846944861888,
-      "background_IoU": 0.9980266347278067,
-      "ms_per_crop": 29.25,
+      "mean_IoU": 0.6797224557155439,
+      "mean_Dice": 0.7967413295929517,
+      "background_IoU": 0.9984021742638232,
+      "ms_per_crop": 46.25,
       "test_crops": 307
     },
     "unet": {
@@ -123,7 +123,7 @@
       "mean_IoU": 0.4862666407954828,
       "mean_Dice": 0.6092793670137346,
       "background_IoU": 0.997105730218938,
-      "ms_per_crop": 90.7,
+      "ms_per_crop": 134.94,
       "test_crops": 307
     }
   },
@@ -134,25 +134,25 @@
       "gt_devices": 307,
       "missed_devices": 0,
       "false_devices": 0,
-      "decision_accuracy": 0.8859934853420195,
-      "decision_macro_f1": 0.8774984050459821,
+      "decision_accuracy": 0.9511400651465798,
+      "decision_macro_f1": 0.9400904512844811,
       "per_decision": {
         "PASS": {
-          "precision": 0.9230769230769231,
-          "recall": 0.9090909090909091,
-          "f1-score": 0.916030534351145,
+          "precision": 0.9558823529411765,
+          "recall": 0.9848484848484849,
+          "f1-score": 0.9701492537313433,
           "support": 132.0
         },
         "REWORK": {
-          "precision": 0.8679245283018868,
-          "recall": 0.8214285714285714,
-          "f1-score": 0.8440366972477065,
+          "precision": 0.8928571428571429,
+          "recall": 0.8928571428571429,
+          "f1-score": 0.8928571428571429,
           "support": 56.0
         },
         "SCRAP": {
-          "precision": 0.8548387096774194,
-          "recall": 0.8907563025210085,
-          "f1-score": 0.8724279835390947,
+          "precision": 0.9739130434782609,
+          "recall": 0.9411764705882353,
+          "f1-score": 0.9572649572649573,
           "support": 119.0
         }
       },
@@ -170,58 +170,58 @@
         ],
         "matrix": [
           [
-            120,
-            0,
-            12,
+            130,
+            1,
+            1,
             0
           ],
           [
             4,
-            46,
-            6,
+            50,
+            2,
             0
           ],
           [
-            6,
-            7,
-            106,
+            2,
+            5,
+            112,
             0
           ]
         ]
       },
-      "scrap_escape_rate": 0.05042016806722689,
-      "false_scrap_rate": 0.09090909090909091,
+      "scrap_escape_rate": 0.01680672268907563,
+      "false_scrap_rate": 0.007575757575757576,
       "defect_type_recognition": {
         "crack": {
-          "recall": 0.9629629629629629,
-          "precision": 0.9629629629629629,
+          "recall": 1.0,
+          "precision": 1.0,
           "support": 27
         },
         "scratch": {
-          "recall": 0.7066666666666667,
+          "recall": 0.8533333333333334,
           "precision": 1.0,
           "support": 75
         },
         "contamination": {
-          "recall": 1.0,
-          "precision": 0.9534883720930233,
+          "recall": 0.9878048780487805,
+          "precision": 0.9529411764705882,
           "support": 82
         },
         "chip": {
-          "recall": 1.0,
-          "precision": 0.9333333333333333,
+          "recall": 0.9642857142857143,
+          "precision": 0.9642857142857143,
           "support": 28
         },
         "missing_pin": {
-          "recall": 0.8421052631578947,
-          "precision": 0.37209302325581395,
+          "recall": 0.8947368421052632,
+          "precision": 0.8947368421052632,
           "support": 19
         }
       },
       "latency_ms_per_frame": {
-        "mean": 100.11399999999999,
-        "median": 97.35,
-        "p95": 136.41
+        "mean": 158.75533333333334,
+        "median": 151.95,
+        "p95": 225.325
       }
     },
     "unet": {
@@ -315,18 +315,18 @@
         }
       },
       "latency_ms_per_frame": {
-        "mean": 220.998,
-        "median": 216.8,
-        "p95": 305.43
+        "mean": 351.3353333333334,
+        "median": 342.15,
+        "p95": 513.7449999999999
       }
     }
   },
   "best": {
     "segmenter": "yolo",
     "segmenter_name": "YOLO11n-seg",
-    "decision_macro_f1": 0.8774984050459821,
-    "decision_accuracy": 0.8859934853420195,
-    "latency_ms_per_frame": 100.11399999999999,
-    "reason": "YOLO11n-seg gives the highest end-to-end decision macro F1 (0.8775, accuracy 0.8860) vs U-Net (0.8178)."
+    "decision_macro_f1": 0.9400904512844811,
+    "decision_accuracy": 0.9511400651465798,
+    "latency_ms_per_frame": 158.75533333333334,
+    "reason": "YOLO11n-seg gives the highest end-to-end decision macro F1 (0.9401, accuracy 0.9511) vs U-Net (0.8178)."
   }
 }

@@ -31,6 +31,8 @@ DEPLOY = C.ROOT / "deploy" / "vercel"
 WORK = C.DATASET_DIR / "real" / "yolo_final"
 PC_MODEL = C.MODEL_DIR / "patchcore_transistor.pt"
 FINAL_WEIGHTS = C.MODEL_DIR / "transistor_seg_yolo11n.pt"
+FINAL_CLS = C.MODEL_DIR / "transistor_type_cls_yolo11s.pt"
+CLS_WORK = C.DATASET_DIR / "real" / "cls_final"
 
 
 def pick_demo(samples):
@@ -71,6 +73,33 @@ def train_final(samples, demo, epochs=40):
     return FINAL_WEIGHTS
 
 
+def train_final_cls(samples, demo, epochs=40):
+    """Final defect-TYPE classifier (report 12.6): YOLO11s-cls on PatchCore-guided crops of
+    every defective MVTec test image except the demo images; same recipe as the CV."""
+    from ultralytics import YOLO
+    from qc.real.evaluate_real import run_patchcore
+    from qc.real.type_classifier import CROP_FRAC, IMGSZ as CLS_IMGSZ, crop_around
+    if FINAL_CLS.exists():
+        return FINAL_CLS
+    test, _, maps = run_patchcore(samples)
+    demo_paths = {s.path for s in demo}
+    items = [(s, m) for s, m in zip(test, maps) if s.defective and s.path not in demo_paths]
+    if CLS_WORK.exists():
+        shutil.rmtree(CLS_WORK)
+    for split, sub in (("train", items), ("val", items[::5])):   # val only satisfies Ultralytics; last.pt is kept
+        for t in DEFECT_TYPES:
+            (CLS_WORK / split / t).mkdir(parents=True, exist_ok=True)
+        for s, m in sub:
+            im = cv2.resize(crop_around(s.path, m, CROP_FRAC), (288, 288), interpolation=cv2.INTER_AREA)
+            cv2.imwrite(str(CLS_WORK / split / s.label / f"{s.path.stem}.png"), im)
+    YOLO(str(C.MODEL_DIR / "pretrained" / "yolo11s-cls.pt")).train(
+        data=str(CLS_WORK), imgsz=CLS_IMGSZ, epochs=epochs, batch=8, patience=0, device=C.DEVICE, workers=2,
+        seed=C.SEED, deterministic=True, project=str(C.RUNS_DIR), name="real_cls_final", exist_ok=True,
+        verbose=False, plots=False, lr0=0.002, optimizer="AdamW", degrees=10, fliplr=0.5, flipud=0.0, erasing=0.2)
+    shutil.copy(C.RUNS_DIR / "real_cls_final" / "weights" / "last.pt", FINAL_CLS)
+    return FINAL_CLS
+
+
 def export_patchcore(threshold: float):
     pc = PatchCore().load(PC_MODEL)
     out = DEPLOY / "models"
@@ -94,6 +123,15 @@ def main(argv=None) -> int:
     rules = yaml.safe_load((C.ROOT / "configs" / "transistor_rules.yaml").read_text())
     cfg["seg"] = {"img_size": IMGSZ, "classes": DEFECT_TYPES, "conf": 0.10,
                  "gate_conf": fus["seg_conf_threshold"] if fus else None}
+    tc = real.get("type_classifier", {})
+    if tc.get("chosen") == "crop":                      # python -m qc.real.type_classifier
+        from qc.real.type_classifier import CROP_FRAC, IMGSZ as CLS_IMGSZ
+        cw = train_final_cls(samples, demo)
+        m = YOLO(str(cw))
+        onnx = m.export(format="onnx", imgsz=CLS_IMGSZ, opset=17, simplify=False)
+        shutil.copy(onnx, DEPLOY / "models" / "transistor_type_cls.onnx")
+        cfg["type_cls"] = {"img_size": CLS_IMGSZ, "crop_fraction": CROP_FRAC,
+                           "classes": [m.names[i] for i in range(len(m.names))]}
     cfg["rules"] = rules
 
     pub = DEPLOY / "public" / "real"

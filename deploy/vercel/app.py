@@ -76,7 +76,8 @@ def health():
         except HTTPException:
             pass
         return {"status": "ok", "models": ["detector_yolo11n.onnx", "segmenter_yolo11n_seg.onnx",
-                                           "patchcore_backbone.onnx", "transistor_seg.onnx"]}
+                                           "patchcore_backbone.onnx", "transistor_seg.onnx",
+                                           "transistor_type_cls.onnx"]}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 

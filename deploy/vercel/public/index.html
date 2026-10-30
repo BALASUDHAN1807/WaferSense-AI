@@ -111,10 +111,10 @@
       <div id="rsummary" style="margin-bottom:12px"></div>
       <div class="imgs">
         <figure><img id="rorig" alt="transistor photo"><figcaption>Photo</figcaption></figure>
-        <figure><img id="rheat" alt="anomaly heat-map"><figcaption>Anomaly heat-map (red = unlike any defect-free part) and detected defect</figcaption></figure>
+        <figure><img id="rheat" alt="anomaly heat-map"><figcaption>Anomaly heat-map (red = unlike any defect-free part) and the region used to name the defect type</figcaption></figure>
       </div>
     </div>
-    <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 81.7 % accurate for the full PASS / REWORK / SCRAP verdict (95 % confidence interval 72–92 %). With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
+    <p class="muted">On held-out MVTec photos the system is 85 % accurate at telling good parts from defective ones (image AUROC 0.948) and 86.7 % accurate for the full PASS / REWORK / SCRAP verdict (95 % confidence interval 77–95 %). The defect type is named by a YOLO11s-cls classifier that looks at the region the heat-map points to (up from 81.7 % with the segmentation model's type). With only 10 defect photos per type, it is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
   </section>
 
   <section id="tab-camera" class="hidden">
@@ -123,7 +123,7 @@
       <div class="controls">
         <select id="cammodel" aria-label="Model">
           <option value="ic">IC packages (YOLO11 + YOLO11-seg)</option>
-          <option value="real">Real transistor (PatchCore + YOLO11-seg)</option>
+          <option value="real">Real transistor (PatchCore + YOLO11-seg + YOLO11s-cls)</option>
         </select>
         <select id="camface" aria-label="Camera">
           <option value="environment">Back camera</option>
@@ -176,7 +176,7 @@
       <h3 style="margin-top:0">About this system</h3>
       <p>An AI quality-inspection system for packaged ICs. A <b>YOLO11n</b> model finds every device in the camera frame; each device is cropped and a <b>YOLO11n-seg</b> model outlines five defect types (crack, scratch, contamination, chip, missing pin). Each defect is measured in millimetres (12 px/mm camera calibration) and quality rules decide PASS, REWORK or SCRAP.</p>
       <p>The <b>Real transistor</b> tab runs the same idea on real MVTec AD photographs: PatchCore anomaly detection plus a YOLO11n-seg defect-type model.</p>
-      <p>The IC-package models were trained by the author on a synthetic dataset of 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set (307 devices) this deployment makes the correct decision for 87.9 % of devices.</p>
+      <p>The IC-package models were trained by the author on a synthetic dataset of 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set (307 devices) this deployment makes the correct decision for 96.1 % of devices (87.9 % before the second training stage).</p>
       <p class="muted">Academic prototype trained on synthetic images — not a manufacturing quality-control decision. Source: <a href="https://github.com/BALASUDHAN1807/WaferSense-AI">github.com/BALASUDHAN1807/WaferSense-AI</a> · Author: Balasudhan R</p>
     </div>
   </section>
@@ -282,7 +282,8 @@ async function inspectReal(blob, name, src) {
     $("#rheat").src = "data:image/png;base64," + b.heatmap_png_base64;
     const truth = name.match(/^(good|bent_lead|cut_lead|damaged_case|misplaced)_/);
     $("#rsummary").innerHTML = `<b>Result:</b> ${badge(b.decision, true)} &nbsp; ` +
-      (b.defect_type ? `defect type <b>${esc(b.defect_type.replace("_", " "))}</b> · ` : "") +
+      (b.defect_type ? `defect type <b>${esc(b.defect_type.replace("_", " "))}</b>` +
+        (b.type_classifier ? ` <span class="muted">(${(b.type_classifier.confidence * 100).toFixed(0)} %, ${esc(b.type_source)})</span>` : "") + ` · ` : "") +
       `anomaly score ${b.anomaly_score.toFixed(2)} (threshold ${b.threshold.toFixed(2)})` + (b.flagged_by.length ? ` · flagged by ${b.flagged_by.join(" + ")}` : "") + ` · ${esc(b.reason)}` +
       (truth ? ` · <span class="muted">true label: ${esc(truth[1].replace("_", " "))}</span>` : "") +
       ` · <span class="muted">${b.timings_ms.total.toFixed(0)} ms</span>`;

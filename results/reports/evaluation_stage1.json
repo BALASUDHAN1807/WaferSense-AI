@@ -1,0 +1,332 @@
+{
+  "detector": {
+    "precision": 0.9997479215064127,
+    "recall": 1.0,
+    "mAP50": 0.995,
+    "mAP50_95": 0.9949999999999999,
+    "test_images": 150
+  },
+  "segmenters": [
+    "yolo",
+    "unet"
+  ],
+  "yolo_seg_val": {
+    "mask_precision": 0.742049939723574,
+    "mask_recall": 0.6635390861888523,
+    "mask_mAP50": 0.6783994210083192,
+    "mask_mAP50_95": 0.3653436153697261,
+    "box_mAP50": 0.7046674956991239,
+    "per_class": {
+      "crack": {
+        "mask_mAP50": 0.9255982982534706,
+        "mask_mAP50_95": 0.44588134351682635
+      },
+      "scratch": {
+        "mask_mAP50": 0.25107756461557884,
+        "mask_mAP50_95": 0.11197718984584906
+      },
+      "contamination": {
+        "mask_mAP50": 0.9264886206452027,
+        "mask_mAP50_95": 0.6705777643305064
+      },
+      "chip": {
+        "mask_mAP50": 0.9407699770541559,
+        "mask_mAP50_95": 0.4891709775316161
+      },
+      "missing_pin": {
+        "mask_mAP50": 0.34806264447318797,
+        "mask_mAP50_95": 0.1091108016238325
+      }
+    }
+  },
+  "tuned_thresholds": {
+    "yolo": {
+      "seg_conf": 0.1,
+      "min_pixels": 6,
+      "val_macro_f1": 0.8465032428742106,
+      "val_accuracy": 0.8518518518518519,
+      "val_devices": 189,
+      "default_0.2_6": {
+        "seg_conf": 0.2,
+        "min_pixels": 6,
+        "val_macro_f1": 0.8278981284246346,
+        "val_accuracy": 0.8359788359788359
+      }
+    },
+    "unet": {
+      "seg_conf": 0.6,
+      "min_pixels": 100,
+      "val_macro_f1": 0.8121866030362762,
+      "val_accuracy": 0.8253968253968254,
+      "val_devices": 189,
+      "default_0.2_6": {
+        "seg_conf": 0.2,
+        "min_pixels": 6,
+        "val_macro_f1": 0.42620046358364116,
+        "val_accuracy": 0.5343915343915344
+      }
+    }
+  },
+  "pixel": {
+    "yolo": {
+      "per_class": {
+        "crack": {
+          "IoU": 0.7135268450009485,
+          "Dice": 0.8328166519043402
+        },
+        "scratch": {
+          "IoU": 0.46903200246511423,
+          "Dice": 0.6385592712453554
+        },
+        "contamination": {
+          "IoU": 0.9075032540406474,
+          "Dice": 0.9515089970287507
+        },
+        "chip": {
+          "IoU": 0.7953504755195492,
+          "Dice": 0.8860113792426918
+        },
+        "missing_pin": {
+          "IoU": 0.16585932958728927,
+          "Dice": 0.28452717300980557
+        }
+      },
+      "mean_IoU": 0.6102543813227097,
+      "mean_Dice": 0.7186846944861888,
+      "background_IoU": 0.9980266347278067,
+      "ms_per_crop": 29.25,
+      "test_crops": 307
+    },
+    "unet": {
+      "per_class": {
+        "crack": {
+          "IoU": 0.6061137640905695,
+          "Dice": 0.7547581966384175
+        },
+        "scratch": {
+          "IoU": 0.4747890719164323,
+          "Dice": 0.6438738677382007
+        },
+        "contamination": {
+          "IoU": 0.8917820605297112,
+          "Dice": 0.9427957682186778
+        },
+        "chip": {
+          "IoU": 0.3668046715689304,
+          "Dice": 0.5367331253673312
+        },
+        "missing_pin": {
+          "IoU": 0.0918436358717706,
+          "Dice": 0.1682358771060456
+        }
+      },
+      "mean_IoU": 0.4862666407954828,
+      "mean_Dice": 0.6092793670137346,
+      "background_IoU": 0.997105730218938,
+      "ms_per_crop": 90.7,
+      "test_crops": 307
+    }
+  },
+  "end_to_end": {
+    "yolo": {
+      "segmenter": "yolo",
+      "test_frames": 150,
+      "gt_devices": 307,
+      "missed_devices": 0,
+      "false_devices": 0,
+      "decision_accuracy": 0.8859934853420195,
+      "decision_macro_f1": 0.8774984050459821,
+      "per_decision": {
+        "PASS": {
+          "precision": 0.9230769230769231,
+          "recall": 0.9090909090909091,
+          "f1-score": 0.916030534351145,
+          "support": 132.0
+        },
+        "REWORK": {
+          "precision": 0.8679245283018868,
+          "recall": 0.8214285714285714,
+          "f1-score": 0.8440366972477065,
+          "support": 56.0
+        },
+        "SCRAP": {
+          "precision": 0.8548387096774194,
+          "recall": 0.8907563025210085,
+          "f1-score": 0.8724279835390947,
+          "support": 119.0
+        }
+      },
+      "confusion_matrix": {
+        "labels_true": [
+          "PASS",
+          "REWORK",
+          "SCRAP"
+        ],
+        "labels_pred": [
+          "PASS",
+          "REWORK",
+          "SCRAP",
+          "MISSED"
+        ],
+        "matrix": [
+          [
+            120,
+            0,
+            12,
+            0
+          ],
+          [
+            4,
+            46,
+            6,
+            0
+          ],
+          [
+            6,
+            7,
+            106,
+            0
+          ]
+        ]
+      },
+      "scrap_escape_rate": 0.05042016806722689,
+      "false_scrap_rate": 0.09090909090909091,
+      "defect_type_recognition": {
+        "crack": {
+          "recall": 0.9629629629629629,
+          "precision": 0.9629629629629629,
+          "support": 27
+        },
+        "scratch": {
+          "recall": 0.7066666666666667,
+          "precision": 1.0,
+          "support": 75
+        },
+        "contamination": {
+          "recall": 1.0,
+          "precision": 0.9534883720930233,
+          "support": 82
+        },
+        "chip": {
+          "recall": 1.0,
+          "precision": 0.9333333333333333,
+          "support": 28
+        },
+        "missing_pin": {
+          "recall": 0.8421052631578947,
+          "precision": 0.37209302325581395,
+          "support": 19
+        }
+      },
+      "latency_ms_per_frame": {
+        "mean": 100.11399999999999,
+        "median": 97.35,
+        "p95": 136.41
+      }
+    },
+    "unet": {
+      "segmenter": "unet",
+      "test_frames": 150,
+      "gt_devices": 307,
+      "missed_devices": 0,
+      "false_devices": 0,
+      "decision_accuracy": 0.8273615635179153,
+      "decision_macro_f1": 0.8178160406100355,
+      "per_decision": {
+        "PASS": {
+          "precision": 0.8702290076335878,
+          "recall": 0.8636363636363636,
+          "f1-score": 0.8669201520912547,
+          "support": 132.0
+        },
+        "REWORK": {
+          "precision": 0.7419354838709677,
+          "recall": 0.8214285714285714,
+          "f1-score": 0.7796610169491526,
+          "support": 56.0
+        },
+        "SCRAP": {
+          "precision": 0.8245614035087719,
+          "recall": 0.7899159663865546,
+          "f1-score": 0.8068669527896996,
+          "support": 119.0
+        }
+      },
+      "confusion_matrix": {
+        "labels_true": [
+          "PASS",
+          "REWORK",
+          "SCRAP"
+        ],
+        "labels_pred": [
+          "PASS",
+          "REWORK",
+          "SCRAP",
+          "MISSED"
+        ],
+        "matrix": [
+          [
+            114,
+            2,
+            16,
+            0
+          ],
+          [
+            6,
+            46,
+            4,
+            0
+          ],
+          [
+            11,
+            14,
+            94,
+            0
+          ]
+        ]
+      },
+      "scrap_escape_rate": 0.09243697478991597,
+      "false_scrap_rate": 0.12121212121212122,
+      "defect_type_recognition": {
+        "crack": {
+          "recall": 0.9629629629629629,
+          "precision": 0.7027027027027027,
+          "support": 27
+        },
+        "scratch": {
+          "recall": 0.8266666666666667,
+          "precision": 1.0,
+          "support": 75
+        },
+        "contamination": {
+          "recall": 1.0,
+          "precision": 0.9761904761904762,
+          "support": 82
+        },
+        "chip": {
+          "recall": 0.5714285714285714,
+          "precision": 0.6956521739130435,
+          "support": 28
+        },
+        "missing_pin": {
+          "recall": 0.5263157894736842,
+          "precision": 0.3225806451612903,
+          "support": 19
+        }
+      },
+      "latency_ms_per_frame": {
+        "mean": 220.998,
+        "median": 216.8,
+        "p95": 305.43
+      }
+    }
+  },
+  "best": {
+    "segmenter": "yolo",
+    "segmenter_name": "YOLO11n-seg",
+    "decision_macro_f1": 0.8774984050459821,
+    "decision_accuracy": 0.8859934853420195,
+    "latency_ms_per_frame": 100.11399999999999,
+    "reason": "YOLO11n-seg gives the highest end-to-end decision macro F1 (0.8775, accuracy 0.8860) vs U-Net (0.8178)."
+  }
+}
