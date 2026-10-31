@@ -13,7 +13,7 @@ Results are shown on a **Streamlit** dashboard, served by a **FastAPI** backend 
 
 **Author:** Balasudhan R (RA2411003012164)
 
-**Live demo:** https://semiconductor-qc.vercel.app (trained models served as ONNX by FastAPI on Vercel, see `deploy/vercel/`). Tabs: upload and inspect, **Real transistor** (MVTec photos), **Live camera** (point a phone or webcam at a part for continuous inspection), conveyor simulation, analytics.
+**Live demo:** https://semiconductor-qc.vercel.app (project website) and https://semiconductor-qc.vercel.app/app/ (inspection console: trained models served as ONNX by FastAPI on Vercel, see `deploy/vercel/`). Console modes: upload and inspect, **Real transistor** (MVTec photos), **Live camera** (point a phone or webcam at a part for continuous inspection), conveyor simulation, analytics.
 
 ![Dashboard](results/graphs/dashboard_screenshot.png)
 

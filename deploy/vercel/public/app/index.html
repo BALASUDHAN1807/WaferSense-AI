@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inspection console | WaferSense</title>
+<meta name="description" content="Automated optical inspection of semiconductor devices: YOLO11 detection, defect segmentation, measurement in mm and PASS / REWORK / SCRAP decisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #edf0f3; --surface: #ffffff; --ink: #15212f; --muted: #5a6778; --line: #d6dce3;
+    --rail: #1a2738; --rail-ink: #c9d3df; --rail-dim: #8796a8;
+    --accent: #2557d6; --accent-soft: #e6edfc;
+    --stage: #1f2b3a; --stage-line: #3a4a5e;
+    --pass: #1e8a4b; --rework: #c27400; --scrap: #c4302c; --none: #6f7b8a;
+    --pass-soft: #e3f3ea; --rework-soft: #fbf0dd; --scrap-soft: #fae5e4; --none-soft: #eceff2;
+    --r: 6px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121a24; --surface: #1a2430; --ink: #e4e9ef; --muted: #98a5b5; --line: #2c3949;
+      --rail: #0f1620; --rail-ink: #c9d3df; --rail-dim: #7c8a9c;
+      --accent: #6e93f0; --accent-soft: #1f2d4a;
+      --stage: #0e151e; --stage-line: #33445a;
+      --pass: #3bb26b; --rework: #e09a2a; --scrap: #e45a55; --none: #8794a4;
+      --pass-soft: #16301f; --rework-soft: #33270f; --scrap-soft: #3a1a19; --none-soft: #222c38;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font: 15px/1.55 "IBM Plex Sans", system-ui, sans-serif; background: var(--ground); color: var(--ink);
+         font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+  .err { color: var(--scrap); }
+
+  /* ---------- shell */
+  .app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+  .rail { background: var(--rail); color: var(--rail-ink); min-width: 0; }
+  .railin { display: flex; flex-direction: column; padding: 20px 14px; position: sticky; top: 0; height: 100vh; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 22px; color: #fff; text-decoration: none; }
+  .brand svg { flex: none; }
+  .brand b { font-weight: 600; font-size: 1.05rem; letter-spacing: .1px; display: block; line-height: 1.2; }
+  .brand small { color: var(--rail-dim); font-size: .78rem; }
+  .rail nav { display: flex; flex-direction: column; gap: 2px; }
+  .rail nav button { all: unset; cursor: pointer; padding: 9px 10px; border-radius: var(--r); color: var(--rail-ink); font-size: .93rem; display: flex; gap: 10px; align-items: center; }
+  .rail nav button svg { opacity: .7; flex: none; }
+  .rail nav button:hover { background: rgba(255,255,255,.06); }
+  .rail nav button.on { background: rgba(110,147,240,.16); color: #fff; }
+  .rail nav button.on svg { opacity: 1; }
+  .rail nav button:focus-visible { outline: 2px solid #6e93f0; }
+  .rail .navgroup { color: var(--rail-dim); font-size: .78rem; padding: 16px 10px 4px; }
+  .rail .foot { margin-top: auto; font-size: .78rem; color: var(--rail-dim); padding: 0 8px; line-height: 1.5; }
+  .rail .foot a { color: var(--rail-ink); }
+
+  .work { padding: 22px 28px 48px; min-width: 0; }
+  .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .top h1 { font-size: 1.5rem; line-height: 1.25; font-weight: 600; margin: 0; letter-spacing: -.2px; }
+  .top p { margin: 4px 0 0; color: var(--muted); max-width: 68ch; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--muted); white-space: nowrap; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--none); }
+  .status.ok i { background: var(--pass); }
+  .status.bad i { background: var(--scrap); }
+
+  /* ---------- workspace */
+  .bench { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  .surface { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+  .surface + .surface, .bench + .surface, .surface + .note { margin-top: 18px; }
+  .surface h2 { font-size: 1rem; font-weight: 600; margin: 0 0 10px; }
+  .note { color: var(--muted); font-size: .86rem; max-width: 80ch; margin: 18px 0 0; }
+
+  /* the camera viewport */
+  .stage { position: relative; background: var(--stage); border-radius: 4px; aspect-ratio: 4 / 3; max-height: 72vh; width: 100%; overflow: hidden; color: #d9e1ea; }
+  .stage.square { aspect-ratio: 1 / 1; }
+  .stage::before, .stage::after { content: ""; position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 2; border-color: #7f93ab; border-style: solid; }
+  .stage::before { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+  .stage::after { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+  .stage .view { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
+  .stage .view.on { display: block; }
+  .stage.over { outline: 2px dashed #8fb0ff; outline-offset: -8px; }
+  .empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; }
+  .empty p { margin: 0; color: #aebbc9; max-width: 34ch; }
+  .tools { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 3; }
+  .seg { display: inline-flex; background: rgba(15,22,32,.72); border: 1px solid var(--stage-line); border-radius: var(--r); padding: 2px; }
+  .seg button { all: unset; cursor: pointer; padding: 5px 11px; font-size: .84rem; border-radius: 4px; color: #c4cfdb; }
+  .seg button.on { background: #e9eef5; color: #15212f; font-weight: 500; }
+  .seg button:focus-visible { outline: 2px solid #8fb0ff; }
+  .scale { position: absolute; left: 16px; bottom: 14px; z-index: 3; font-size: .78rem; color: #e9eef5; display: flex; flex-direction: column; gap: 3px; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  .scale i { display: block; height: 6px; border: 2px solid #e9eef5; border-top: 0; }
+  .busy { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; background: rgba(15,22,32,.45); font-size: .92rem; }
+  .busy span { background: rgba(15,22,32,.85); padding: 8px 14px; border-radius: var(--r); border: 1px solid var(--stage-line); }
+  .live { position: absolute; top: 14px; left: 44px; z-index: 3; display: inline-flex; gap: 6px; align-items: center; font-size: .8rem; font-weight: 600; color: #fff; }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #ff5a52; animation: blink 1.2s steps(2, start) infinite; }
+  @keyframes blink { to { visibility: hidden; } }
+  .caption { color: var(--muted); font-size: .84rem; margin-top: 8px; }
+
+  /* sample strip */
+  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+  .strip button { all: unset; cursor: pointer; border-radius: 4px; overflow: hidden; border: 2px solid transparent; position: relative; background: var(--stage); }
+  .strip button img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .strip button:hover, .strip button.on { border-color: var(--accent); }
+  .strip button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .strip button span { position: absolute; left: 0; right: 0; bottom: 0; font-size: .72rem; padding: 2px 5px; background: rgba(15,22,32,.78); color: #e9eef5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .striphead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .striphead h2 { margin: 0; }
+
+  /* verdict panel: the bin-sort display */
+  .verdict { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--none); border-radius: var(--r); padding: 16px 18px; }
+  .verdict[data-d="PASS"] { border-left-color: var(--pass); }
+  .verdict[data-d="REWORK"] { border-left-color: var(--rework); }
+  .verdict[data-d="SCRAP"] { border-left-color: var(--scrap); }
+  .verdict .vl { color: var(--muted); font-size: .86rem; }
+  .verdict strong { display: block; font: 700 3.4rem/1 "IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif; letter-spacing: .5px; margin: 6px 0 4px; color: var(--none); }
+  .verdict[data-d="PASS"] strong { color: var(--pass); }
+  .verdict[data-d="REWORK"] strong { color: var(--rework); }
+  .verdict[data-d="SCRAP"] strong { color: var(--scrap); }
+  .verdict .why { margin: 0 0 12px; }
+  .verdict.stamp strong { animation: stamp .28s ease-out; }
+  @keyframes stamp { from { transform: scale(1.12); opacity: 0; } to { transform: none; opacity: 1; } }
+  .verdict.idle strong { font-size: 1.5rem; color: var(--muted); font-family: inherit; font-weight: 500; letter-spacing: 0; }
+  dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: .9rem; }
+  dl.facts dt { color: var(--muted); }
+  dl.facts dd { margin: 0; text-align: right; }
+  .tally { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 14px; }
+  .tally div { border-radius: 4px; padding: 8px 10px; }
+  .tally b { display: block; font-size: 1.35rem; font-weight: 600; line-height: 1.2; }
+  .tally span { font-size: .8rem; }
+  .t-PASS { background: var(--pass-soft); color: var(--pass); }
+  .t-REWORK { background: var(--rework-soft); color: var(--rework); }
+  .t-SCRAP { background: var(--scrap-soft); color: var(--scrap); }
+  .meter { margin: 10px 0 14px; }
+  .meter .bar { position: relative; height: 8px; background: var(--none-soft); border-radius: 4px; }
+  .meter .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--pass); }
+  .meter .bar i.hot { background: var(--scrap); }
+  .meter .bar u { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+  .meter .lab { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); margin-top: 5px; }
+  .probs div { display: grid; grid-template-columns: 96px 1fr 44px; gap: 8px; align-items: center; font-size: .82rem; margin: 3px 0; }
+  .probs i { display: block; height: 6px; border-radius: 3px; background: var(--accent); }
+  .probs span { color: var(--muted); }
+  .probs span:last-child { text-align: right; }
+
+  /* tags */
+  .tag { display: inline-block; border-radius: 4px; padding: 1px 8px; font-weight: 600; font-size: .78rem; letter-spacing: .3px; }
+  .tag.PASS { background: var(--pass-soft); color: var(--pass); }
+  .tag.REWORK { background: var(--rework-soft); color: var(--rework); }
+  .tag.SCRAP { background: var(--scrap-soft); color: var(--scrap); }
+  .tag.NO_DEVICE { background: var(--none-soft); color: var(--none); }
+
+  /* tables */
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: .82rem; }
+  td.num, th.num { text-align: right; }
+  tr:last-child td { border-bottom: 0; }
+  tr.group td { background: var(--ground); font-weight: 600; }
+
+  /* controls */
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: var(--r); padding: 8px 15px; font: inherit; font-weight: 500; font-size: .92rem; cursor: pointer; }
+  .btn:hover { filter: brightness(1.07); }
+  .btn.ghost { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  .stage .btn.ghost { background: rgba(15,22,32,.72); color: #e9eef5; border-color: var(--stage-line); }
+  .btn.small { padding: 5px 11px; font-size: .84rem; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  select { font: inherit; font-size: .92rem; padding: 7px 10px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  .check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; color: var(--muted); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .progress { height: 4px; background: var(--none-soft); border-radius: 2px; overflow: hidden; margin: 12px 0 0; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+
+  /* analytics */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .kpi { background: var(--surface); padding: 14px 16px; }
+  .kpi span { color: var(--muted); font-size: .84rem; }
+  .kpi b { display: block; font-size: 1.55rem; font-weight: 600; line-height: 1.3; }
+  .bars div { display: grid; grid-template-columns: 110px 1fr 44px; gap: 10px; align-items: center; margin: 7px 0; font-size: .88rem; }
+  .bars label { color: var(--muted); }
+  .bars i { height: 12px; border-radius: 3px; background: var(--accent); display: block; min-width: 2px; }
+  .bars span { text-align: right; }
+
+  /* about: the pipeline is a real sequence */
+  ol.pipeline { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  ol.pipeline li { counter-increment: s; padding: 14px 16px; background: var(--surface); border-right: 1px solid var(--line); }
+  ol.pipeline li:last-child { border-right: 0; }
+  ol.pipeline li::before { content: counter(s); display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; font-size: .78rem; font-weight: 600; background: var(--accent-soft); color: var(--accent); margin-bottom: 8px; }
+  ol.pipeline b { display: block; font-weight: 600; }
+  ol.pipeline span { color: var(--muted); font-size: .86rem; }
+  .prose p { max-width: 72ch; margin: 0 0 10px; }
+  ol.pipeline + .surface { margin-top: 18px; }
+
+  @media (max-width: 1080px) {
+    .bench { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .rail { position: sticky; top: 0; z-index: 10; }
+    .railin { position: static; height: auto; padding: 10px 12px 8px; }
+    .brand { padding: 0 4px 8px; }
+    .brand small, .rail .navgroup, .rail .foot { display: none; }
+    .rail nav { flex-direction: row; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+    .rail nav button { white-space: nowrap; padding: 7px 10px; }
+    .rail nav button svg { display: none; }
+    .work { padding: 16px 16px 40px; }
+    .top { flex-direction: column; gap: 10px; }
+    .top h1 { font-size: 1.3rem; }
+    .two { grid-template-columns: 1fr; }
+    .verdict strong { font-size: 2.8rem; }
+    ol.pipeline li { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail"><div class="railin">
+    <a class="brand" href="/" aria-label="WaferSense home page">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <circle cx="15" cy="15" r="12.5" fill="none" stroke="#6e93f0" stroke-width="1.6"/>
+        <path d="M9.5 25.8h11" stroke="#1a2738" stroke-width="3"/>
+        <path d="M9.6 25.3h10.8" stroke="#6e93f0" stroke-width="1.6"/>
+        <g fill="#c9d3df"><rect x="9" y="9" width="5" height="5" rx=".6"/><rect x="16" y="9" width="5" height="5" rx=".6"/><rect x="9" y="16" width="5" height="5" rx=".6"/><rect x="16" y="16" width="5" height="5" rx=".6" fill="#e45a55"/></g>
+      </svg>
+      <span><b>WaferSense</b><small>Device inspection</small></span>
+    </a>
+    <nav aria-label="Sections">
+      <div class="navgroup">Inspect</div>
+      <button data-tab="inspect" class="on"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 2v-1M8 2v-1M11 2v-1M5 15v-1M8 15v-1M11 15v-1"/></svg>IC packages</button>
+      <button data-tab="real"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8v6H4z"/><path d="M5.5 8v6M8 8v6M10.5 8v6"/></svg>Real transistors</button>
+      <button data-tab="camera"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="4" width="13" height="9" rx="1.5"/><circle cx="8" cy="8.5" r="2.5"/><path d="M5.5 4l1-2h3l1 2"/></svg>Live camera</button>
+      <button data-tab="conveyor"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="11.5" r="2"/><circle cx="12.5" cy="11.5" r="2"/><path d="M3.5 9.5h9M3.5 13.5h9M5 4h3v4H5zM9 5h2.5v3H9z"/></svg>Conveyor run</button>
+      <div class="navgroup">Line data</div>
+      <button data-tab="analytics"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14h12M4 12V8M7.3 12V4M10.6 12V6.5M13.5 12V9.5"/></svg>Analytics</button>
+      <button data-tab="rules"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10M3 6.5h10M3 10h6M3 13.5h8"/></svg>Quality rules</button>
+      <button data-tab="about"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.3"/><path d="M8 7v4.5M8 4.6v.1"/></svg>How it works</button>
+    </nav>
+    <div class="foot">Built by Balasudhan R<br><a href="https://github.com/BALASUDHAN1807/WaferSense-AI">Source on GitHub</a></div>
+  </div></aside>
+
+  <main class="work">
+    <div class="top">
+      <div><h1 id="title">Inspect IC packages</h1><p id="lede"></p></div>
+      <span id="health" class="status" role="status"><i></i><span>Checking models</span></span>
+    </div>
+
+    <!-- ===================== IC packages -->
+    <section id="tab-inspect" data-title="Inspect IC packages" data-lede="Each device in the camera frame is found, its defects are outlined and measured in millimetres, and quality rules decide whether it ships, goes to rework or is scrapped.">
+      <div class="bench">
+        <div>
+          <div id="stage" class="stage square">
+            <div class="empty" id="drop">
+              <p>Drop a top-view camera frame here, or pick a sample from the test set below.</p>
+              <button class="btn" id="choose">Choose image</button>
+              <input id="file" type="file" accept="image/*" class="hidden">
+            </div>
+            <img id="anno" class="view" alt="Inspection result with device boxes and defect masks">
+            <img id="orig" class="view" alt="Camera frame">
+            <div class="tools hidden" id="tools">
+              <div class="seg" role="group" aria-label="View"><button data-v="anno" class="on">Result</button><button data-v="orig">Camera frame</button></div>
+              <button class="btn ghost small" id="newimg">New image</button>
+            </div>
+            <div class="scale hidden" id="scale"><i></i><span>5 mm</span></div>
+            <div class="busy hidden" id="busy"><span>Inspecting…</span></div>
+          </div>
+          <div class="caption" id="cap">Box colour shows the device decision; coloured areas are the defects found. Scale assumes the 12 px/mm camera calibration.</div>
+        </div>
+        <div>
+          <div class="verdict idle" id="verdict"><span class="vl">Frame verdict</span><strong>Waiting for an image</strong><p class="why muted">The verdict for the whole frame is the most severe device decision.</p></div>
+          <div id="status" class="note" role="status"></div>
+        </div>
+      </div>
+      <div class="surface">
+        <div class="striphead"><h2>Test-set samples</h2><span class="muted" style="font-size:.84rem">Frames the models never saw in training</span></div>
+        <div id="samples" class="strip"></div>
+      </div>
+      <div class="surface tablewrap hidden" id="defectwrap"><h2>Measured defects</h2><table id="defects"></table></div>
+    </section>
+
+    <!-- ===================== Real transistors -->
+    <section id="tab-real" class="hidden" data-title="Inspect real transistors" data-lede="Real photographs from the MVTec AD dataset. PatchCore, trained only on defect-free parts, scores how unusual each region is; a classifier names the defect where the heat-map points.">
+      <div class="bench">
+        <div>
+          <div id="rstage" class="stage square">
+            <div class="empty" id="rdrop">
+              <p>Drop a top-view transistor photo here, or pick a demo photo below.</p>
+              <button class="btn" id="rchoose">Choose photo</button>
+              <input id="rfile" type="file" accept="image/*" class="hidden">
+            </div>
+            <img id="rheat" class="view" alt="Anomaly heat-map with the region used to name the defect">
+            <img id="rorig" class="view" alt="Transistor photo">
+            <div class="tools hidden" id="rtools">
+              <div class="seg" role="group" aria-label="View"><button data-v="rheat" class="on">Heat-map</button><button data-v="rorig">Photo</button></div>
+              <button class="btn ghost small" id="rnew">New photo</button>
+            </div>
+            <div class="busy hidden" id="rbusy"><span>Inspecting…</span></div>
+          </div>
+          <div class="caption">Red regions look unlike any defect-free part. The box marks the region the classifier used to name the defect.</div>
+        </div>
+        <div>
+          <div class="verdict idle" id="rverdict"><span class="vl">Part verdict</span><strong>Waiting for a photo</strong><p class="why muted">Bent leads and misplaced parts go to rework; cut leads and damaged cases are scrapped.</p></div>
+          <div id="rstatus" class="note" role="status"></div>
+        </div>
+      </div>
+      <div class="surface">
+        <div class="striphead"><h2>Demo photos</h2><span class="muted" style="font-size:.84rem">Held out from every model</span></div>
+        <div id="rsamples" class="strip"></div>
+      </div>
+      <p class="note">Measured on held-out MVTec photos: 86.7 % of PASS / REWORK / SCRAP verdicts correct (95 % confidence interval 77–95 %), image AUROC 0.948 for defect versus good. Naming the type from the heat-map region raised this from 81.7 %. With 10 defect photos per type this is a proof of concept. Images: MVTec AD (Bergmann et al., CVPR 2019), CC BY-NC-SA 4.0.</p>
+    </section>
+
+    <!-- ===================== Live camera -->
+    <section id="tab-camera" class="hidden" data-title="Live camera" data-lede="Point a phone or webcam at a part, as a camera above the line would. About one frame per second is inspected; frames are not stored.">
+      <div class="surface">
+        <div class="controls">
+          <select id="cammodel" aria-label="Model">
+            <option value="ic">IC packages</option>
+            <option value="real">Real transistors</option>
+          </select>
+          <select id="camface" aria-label="Camera">
+            <option value="environment">Back camera</option>
+            <option value="user">Front camera or webcam</option>
+          </select>
+          <button id="camstart" class="btn">Start camera</button>
+          <button id="camstop" class="btn ghost" disabled>Stop camera</button>
+          <button id="camsnap" class="btn ghost" disabled>Inspect this frame</button>
+          <label class="check"><input type="checkbox" id="camauto" checked> Inspect continuously</label>
+        </div>
+        <div id="camstat" class="note" role="status" style="margin-top:10px"></div>
+      </div>
+      <div class="bench" style="margin-top:18px">
+        <div class="two">
+          <div>
+            <div class="stage"><video id="camvideo" class="view on" playsinline muted></video><span id="camlive" class="live hidden">Live</span>
+              <div class="empty" id="camempty"><p>Camera is off.</p></div></div>
+            <div class="caption">Camera</div>
+          </div>
+          <div>
+            <div class="stage"><img id="camout" class="view" alt="Latest inspection"><div class="empty" id="outempty"><p>The latest inspected frame appears here.</p></div></div>
+            <div class="caption" id="camcap">Latest inspection</div>
+          </div>
+        </div>
+        <div class="verdict idle" id="camverdict"><span class="vl">Latest frame</span><strong>No frames yet</strong><div id="camsum"></div></div>
+      </div>
+      <p class="note">The IC model learned from synthetic top-view chip images and the transistor model from MVTec photos, so they work best on similar top-down views with even lighting. Results on a phone camera are a demonstration, not a measured accuracy.</p>
+    </section>
+
+    <!-- ===================== Conveyor -->
+    <section id="tab-conveyor" class="hidden" data-title="Conveyor run" data-lede="Feeds every test-set sample through the system in turn, the way frames arrive from a camera over a production line.">
+      <div class="bench">
+        <div>
+          <div class="stage square"><img id="convimg" class="view" alt="Current conveyor frame"><div class="empty" id="convempty"><p>Start the run to stream the sample frames.</p></div></div>
+          <div class="progress"><i id="convbar"></i></div>
+          <div class="caption" id="convstat">Ready</div>
+        </div>
+        <div>
+          <div class="verdict idle" id="convverdict"><span class="vl">Current frame</span><strong>Not running</strong><div id="convsum"></div></div>
+          <div class="controls" style="margin-top:14px"><button id="run" class="btn">Start run</button><button id="stop" class="btn ghost">Stop run</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Analytics -->
+    <section id="tab-analytics" class="hidden" data-title="Analytics" data-lede="Every IC inspection you run on this device, from uploads, samples, the conveyor and the camera.">
+      <div class="kpis" id="kpis"></div>
+      <div class="two" style="margin-top:18px">
+        <div class="surface"><h2>Decisions</h2><div class="bars" id="bars-dec"></div></div>
+        <div class="surface" style="margin-top:0"><h2>Defects found by type</h2><div class="bars" id="bars-def"></div></div>
+      </div>
+      <div class="surface tablewrap"><div class="striphead"><h2>Recent inspections</h2><button id="clear" class="btn ghost small">Clear history</button></div><table id="hist"></table></div>
+      <p class="note">History is kept in this browser only. The full local version stores every inspection, device and defect in SQLite.</p>
+    </section>
+
+    <!-- ===================== Rules -->
+    <section id="tab-rules" class="hidden" data-title="Quality rules" data-lede="Each defect is measured and judged on its own; a device takes the most severe verdict of its defects.">
+      <div class="surface tablewrap"><table id="rules"></table></div>
+    </section>
+
+    <!-- ===================== About -->
+    <section id="tab-about" class="hidden" data-title="How it works" data-lede="An automated optical inspection system for packaged semiconductor devices.">
+      <ol class="pipeline">
+        <li><b>Find devices</b><span>YOLO11n locates every IC package in the camera frame.</span></li>
+        <li><b>Outline defects</b><span>YOLO11n-seg masks cracks, scratches, contamination, chips and missing pins.</span></li>
+        <li><b>Measure</b><span>Masks become area and length in millimetres at 12 px/mm.</span></li>
+        <li><b>Decide</b><span>Quality rules give PASS, REWORK or SCRAP per device.</span></li>
+      </ol>
+      <div class="surface prose">
+        <h2>Results</h2>
+        <p>The IC models were trained on 750 generated camera frames (1,459 devices) and are served here as ONNX files by a FastAPI function. On the held-out test set of 307 devices this deployment makes the correct decision for 96.1 % of them; a second training stage that oversampled scratches and missing pins raised this from 87.9 %.</p>
+        <p>On real MVTec AD transistor photos, PatchCore anomaly detection plus a defect-type classifier gets 86.7 % of held-out verdicts right.</p>
+        <p class="muted">Academic prototype trained mostly on synthetic images; not a manufacturing quality-control decision. Source: <a href="https://github.com/BALASUDHAN1807/WaferSense-AI">github.com/BALASUDHAN1807/WaferSense-AI</a>. Author: Balasudhan R.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const DEC = ["PASS", "REWORK", "SCRAP"];
+const DEFECTS = ["crack", "scratch", "contamination", "chip", "missing_pin"];
+const PX_PER_MM = 12;
+const nice = s => String(s).replace(/_/g, " ");
+const tag = d => `<span class="tag ${d}">${nice(d)}</span>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const WARM = " The first request after a pause can take a few seconds while the models load, so try again.";
+
+// ---------- verdict display
+function setVerdict(el, d, label, body) {
+  el.classList.remove("idle", "stamp");
+  el.dataset.d = d;
+  el.innerHTML = `<span class="vl">${label}</span><strong>${nice(d)}</strong>${body}`;
+  void el.offsetWidth; el.classList.add("stamp");
+}
+const tally = c => `<div class="tally">${DEC.map(d => `<div class="t-${d}"><b>${c[d]}</b><span>${nice(d).toLowerCase()}</span></div>`).join("")}</div>`;
+
+// ---------- tabs
+const tabs = document.querySelectorAll(".rail nav button");
+function show(tab) {
+  tabs.forEach(x => x.classList.toggle("on", x.dataset.tab === tab));
+  document.querySelectorAll("main > section").forEach(s => {
+    const on = s.id === "tab-" + tab;
+    s.classList.toggle("hidden", !on);
+    if (on) { $("#title").textContent = s.dataset.title; $("#lede").textContent = s.dataset.lede; }
+  });
+  if (tab !== "camera") camStop();
+  if (tab === "analytics") renderAnalytics();
+}
+tabs.forEach(b => b.onclick = () => { window.history.replaceState(null, "", "#" + b.dataset.tab); show(b.dataset.tab); });
+
+// ---------- model status (live)
+fetch("/api/health").then(r => r.json()).then(h => {
+  const el = $("#health");
+  if (h.status === "ok") { el.classList.add("ok"); el.lastElementChild.textContent = `${h.models.length} models ready`; }
+  else { el.classList.add("bad"); el.lastElementChild.textContent = "Models unavailable"; }
+}).catch(() => { $("#health").classList.add("bad"); $("#health").lastElementChild.textContent = "Server unreachable"; });
+
+// ---------- stage helpers
+function stageView(stage, id) {
+  stage.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === id));
+  stage.querySelectorAll(".seg button").forEach(b => b.classList.toggle("on", b.dataset.v === id));
+}
+function wireStage(stage, onFile) {
+  stage.querySelectorAll(".seg button").forEach(b => b.onclick = () => stageView(stage, b.dataset.v));
+  stage.ondragover = e => { e.preventDefault(); stage.classList.add("over"); };
+  stage.ondragleave = () => stage.classList.remove("over");
+  stage.ondrop = e => { e.preventDefault(); stage.classList.remove("over"); const f = e.dataTransfer.files[0]; f && onFile(f); };
+}
+function placeScale() {
+  const img = $("#anno"), st = $("#stage"), sc = $("#scale");
+  if (!img.naturalWidth || st.querySelector(".empty:not(.hidden)")) return sc.classList.add("hidden");
+  const k = Math.min(st.clientWidth / img.naturalWidth, st.clientHeight / img.naturalHeight);
+  sc.querySelector("i").style.width = (5 * PX_PER_MM * k) + "px";
+  sc.classList.remove("hidden");
+}
+window.addEventListener("resize", placeScale);
+
+// ---------- history (browser storage, guarded)
+function loadHist() { try { return JSON.parse(localStorage.getItem("qc_history") || "[]"); } catch { return []; } }
+function saveHist(h) { try { localStorage.setItem("qc_history", JSON.stringify(h.slice(-300))); } catch {} }
+let history = loadHist();
+
+// ---------- IC inspection API
+async function inspectBlob(blob, name) {
+  const fd = new FormData();
+  fd.append("file", blob, name);
+  const r = await fetch("/api/inspect", { method: "POST", body: fd });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.detail || `HTTP ${r.status}`);
+  const defects = {};
+  body.devices.forEach(d => d.defects.forEach(f => defects[f.cls] = (defects[f.cls] || 0) + 1));
+  history.push({ t: new Date().toISOString(), name, overall: body.overall, counts: body.counts, ms: body.timings_ms.total, defects });
+  saveHist(history);
+  return body;
+}
+
+function showResult(body, src) {
+  const st = $("#stage");
+  $("#drop").classList.add("hidden"); $("#tools").classList.remove("hidden");
+  $("#orig").src = src;
+  $("#anno").onload = placeScale;
+  $("#anno").src = "data:image/png;base64," + body.annotated_image_png_base64;
+  stageView(st, "anno");
+  const n = body.devices.length;
+  const why = body.overall === "NO_DEVICE" ? "No IC package was found in this frame." :
+    body.overall === "PASS" ? `All ${n} device${n > 1 ? "s" : ""} within the quality limits.` :
+    (body.devices.flatMap(d => d.defects).filter(f => f.verdict === body.overall).map(f => f.reason)[0] || "");
+  setVerdict($("#verdict"), body.overall, "Frame verdict",
+    `<p class="why">${esc(why.charAt(0).toUpperCase() + why.slice(1))}</p>${tally(body.counts)}
+     <dl class="facts"><dt>Devices found</dt><dd>${n}</dd><dt>Defects measured</dt><dd>${body.devices.reduce((a, d) => a + d.defects.length, 0)}</dd>
+     <dt>Detection</dt><dd>${body.timings_ms.detection.toFixed(0)} ms</dd><dt>Segmentation</dt><dd>${body.timings_ms.segmentation.toFixed(0)} ms</dd></dl>`);
+  let rows = `<tr><th>Device</th><th>Decision</th><th>Defect</th><th class="num">Area (mm²)</th><th class="num">Length (mm)</th><th class="num">Confidence</th><th>Verdict</th><th>Reason</th></tr>`;
+  body.devices.forEach((d, i) => {
+    if (!d.defects.length) rows += `<tr><td>${i + 1}</td><td>${tag(d.decision)}</td><td colspan="6" class="muted">No defects found</td></tr>`;
+    d.defects.forEach(f => rows += `<tr><td>${i + 1}</td><td>${tag(d.decision)}</td><td>${esc(nice(f.cls))}</td><td class="num">${f.area_mm2.toFixed(2)}</td><td class="num">${f.length_mm.toFixed(2)}</td><td class="num">${(f.confidence * 100).toFixed(0)} %</td><td>${tag(f.verdict)}</td><td>${esc(f.reason)}</td></tr>`);
+  });
+  $("#defects").innerHTML = rows;
+  $("#defectwrap").classList.toggle("hidden", !n);
+}
+
+async function inspectFile(blob, name, src) {
+  $("#busy").classList.remove("hidden"); $("#status").textContent = ""; $("#status").className = "note";
+  try { showResult(await inspectBlob(blob, name), src); }
+  catch (e) { $("#status").textContent = "Inspection failed: " + e.message + "." + WARM; $("#status").className = "note err"; }
+  finally { $("#busy").classList.add("hidden"); }
+}
+function useFile(f) {
+  if (f.size > 4 * 1024 * 1024) { $("#status").textContent = "This image is larger than 4 MB. Choose a smaller one."; $("#status").className = "note err"; return; }
+  document.querySelectorAll("#samples button").forEach(b => b.classList.remove("on"));
+  inspectFile(f, f.name, URL.createObjectURL(f));
+}
+$("#choose").onclick = () => $("#file").click();
+$("#newimg").onclick = () => $("#file").click();
+$("#file").onchange = () => { $("#file").files[0] && useFile($("#file").files[0]); $("#file").value = ""; };
+wireStage($("#stage"), useFile);
+
+let sampleNames = [];
+function strip(el, items, onPick) {
+  el.innerHTML = items.map((s, i) => `<button data-i="${i}" title="${esc(s.title)}"><img src="${s.src}" alt="${esc(s.title)}" loading="lazy">${s.label ? `<span>${esc(s.label)}</span>` : ""}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = async () => {
+    el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    const s = items[+b.dataset.i];
+    onPick(await (await fetch(s.src)).blob(), s.name, s.src);
+  });
+}
+fetch("/api/samples").then(r => r.json()).then(names => {
+  sampleNames = names;
+  strip($("#samples"), names.map(n => ({ src: `/samples/${n}`, name: n, title: n })), inspectFile);
+});
+
+// ---------- real transistors (MVTec AD)
+async function inspectReal(blob, name, src) {
+  $("#rbusy").classList.remove("hidden"); $("#rstatus").textContent = ""; $("#rstatus").className = "note";
+  try {
+    const fd = new FormData(); fd.append("file", blob, name);
+    const r = await fetch("/api/inspect-real", { method: "POST", body: fd });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.detail || `HTTP ${r.status}`);
+    $("#rdrop").classList.add("hidden"); $("#rtools").classList.remove("hidden");
+    $("#rorig").src = src; $("#rheat").src = "data:image/png;base64," + b.heatmap_png_base64;
+    stageView($("#rstage"), "rheat");
+    const truth = name.match(/^(good|bent_lead|cut_lead|damaged_case|misplaced)_/);
+    const top = 2 * b.threshold, pos = v => Math.min(100, 100 * v / top);
+    const tc = b.type_classifier;
+    const probs = tc ? `<div class="probs" style="margin:6px 0 14px">${Object.entries(tc.probs).sort((a, z) => z[1] - a[1]).map(([k, v]) =>
+      `<div><span>${esc(nice(k))}</span><i style="width:${Math.max(2, 100 * v)}%"></i><span>${(100 * v).toFixed(0)} %</span></div>`).join("")}</div>` : "";
+    setVerdict($("#rverdict"), b.decision, "Part verdict",
+      `<p class="why">${b.defect_type ? `Defect type: <b>${esc(nice(b.defect_type))}</b>. ` : ""}${esc(b.reason.charAt(0).toUpperCase() + b.reason.slice(1))}.</p>
+       <div class="meter"><div class="bar"><i class="${b.anomalous ? "hot" : ""}" style="width:${pos(b.anomaly_score)}%"></i><u style="left:${pos(b.threshold)}%"></u></div>
+       <div class="lab"><span>Anomaly score ${b.anomaly_score.toFixed(2)}</span><span>limit ${b.threshold.toFixed(2)}</span></div></div>
+       ${probs}
+       <dl class="facts"><dt>Flagged by</dt><dd>${b.flagged_by.length ? esc(b.flagged_by.join(" and ")) : "neither model"}</dd>
+       ${tc ? `<dt>Type named by</dt><dd>YOLO11s-cls</dd>` : ""}
+       ${truth ? `<dt>True label</dt><dd>${esc(nice(truth[1]))}</dd>` : ""}
+       <dt>Server time</dt><dd>${b.timings_ms.total.toFixed(0)} ms</dd></dl>`);
+  } catch (e) {
+    $("#rstatus").textContent = "Inspection failed: " + e.message + "." + WARM; $("#rstatus").className = "note err";
+  } finally { $("#rbusy").classList.add("hidden"); }
+}
+const useReal = f => { document.querySelectorAll("#rsamples button").forEach(b => b.classList.remove("on")); inspectReal(f, f.name, URL.createObjectURL(f)); };
+$("#rchoose").onclick = () => $("#rfile").click();
+$("#rnew").onclick = () => $("#rfile").click();
+$("#rfile").onchange = () => { $("#rfile").files[0] && useReal($("#rfile").files[0]); $("#rfile").value = ""; };
+wireStage($("#rstage"), useReal);
+fetch("/api/real-samples").then(r => r.json()).then(list => {
+  strip($("#rsamples"), list.map(s => ({ src: "/" + s.file, name: s.file.split("/").pop(), title: nice(s.label), label: nice(s.label) })), inspectReal);
+}).catch(() => {});
+
+// ---------- live camera
+const cam = { stream: null, busy: false, timer: null, tally: { PASS: 0, REWORK: 0, SCRAP: 0 }, n: 0 };
+const camCanvas = document.createElement("canvas");
+function camGrab() {
+  const v = $("#camvideo"), w = v.videoWidth, h = v.videoHeight;
+  if (!w) return Promise.resolve(null);
+  const k = Math.min(1, 800 / Math.max(w, h));                 // keep uploads small (< 200 KB)
+  camCanvas.width = Math.round(w * k); camCanvas.height = Math.round(h * k);
+  camCanvas.getContext("2d").drawImage(v, 0, 0, camCanvas.width, camCanvas.height);
+  return new Promise(res => camCanvas.toBlob(res, "image/jpeg", 0.85));
+}
+async function camInspect() {
+  if (cam.busy || !cam.stream) return;
+  cam.busy = true;
+  try {
+    const blob = await camGrab();
+    if (!blob) return;
+    const real = $("#cammodel").value === "real";
+    const fd = new FormData(); fd.append("file", blob, `camera_${Date.now()}.jpg`);
+    const t0 = performance.now();
+    const r = await fetch(real ? "/api/inspect-real" : "/api/inspect", { method: "POST", body: fd });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.detail || `HTTP ${r.status}`);
+    const ms = performance.now() - t0;
+    cam.n++;
+    let verdict, detail;
+    if (real) {
+      verdict = b.decision;
+      $("#camout").src = "data:image/png;base64," + b.heatmap_png_base64;
+      $("#camcap").textContent = "Anomaly heat-map (red is unusual) and the region used to name the defect";
+      detail = `${b.defect_type ? `Defect type: <b>${esc(nice(b.defect_type))}</b>. ` : ""}Anomaly score ${b.anomaly_score.toFixed(2)}, limit ${b.threshold.toFixed(2)}.`;
+      cam.tally[verdict]++;
+    } else {
+      verdict = b.overall;
+      $("#camout").src = "data:image/png;base64," + b.annotated_image_png_base64;
+      $("#camcap").textContent = "Detected devices (box colour is the decision) and defects";
+      DEC.forEach(d => cam.tally[d] += b.counts[d]);
+      const defects = {};
+      b.devices.forEach(d => d.defects.forEach(f => defects[f.cls] = (defects[f.cls] || 0) + 1));
+      history.push({ t: new Date().toISOString(), name: "camera frame", overall: b.overall, counts: b.counts, ms: b.timings_ms.total, defects });
+      saveHist(history);
+      detail = `${b.devices.length} device${b.devices.length === 1 ? "" : "s"} in view` +
+        (Object.keys(defects).length ? `; ${Object.entries(defects).map(([k, v]) => `${v} ${esc(nice(k))}`).join(", ")}` : "") + ".";
+    }
+    $("#camout").classList.add("on"); $("#outempty").classList.add("hidden");
+    setVerdict($("#camverdict"), verdict, "Latest frame",
+      `<p class="why">${detail}</p>${tally(cam.tally)}<dl class="facts"><dt>Frames inspected</dt><dd>${cam.n}</dd><dt>Round trip</dt><dd>${ms.toFixed(0)} ms</dd></dl>`);
+    $("#camstat").textContent = "";
+  } catch (e) {
+    $("#camstat").textContent = "Inspection failed: " + e.message + "." + WARM; $("#camstat").className = "note err";
+  } finally { cam.busy = false; }
+}
+function camLoop() {
+  clearInterval(cam.timer);
+  if ($("#camauto").checked && cam.stream) cam.timer = setInterval(camInspect, 1000);
+}
+async function camStart() {
+  $("#camstat").className = "note";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    $("#camstat").textContent = "This browser can't open a camera here. Use Chrome, Safari or Edge over HTTPS."; $("#camstat").className = "note err"; return;
+  }
+  camStop();
+  try {
+    cam.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: $("#camface").value }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+  } catch (e) {
+    $("#camstat").textContent = e.name === "NotAllowedError" ? "Camera access is blocked. Allow the camera for this site, then start again." :
+      e.name === "NotFoundError" ? "No camera was found on this device." : "The camera could not be opened: " + e.message;
+    $("#camstat").className = "note err"; cam.stream = null; return;
+  }
+  const v = $("#camvideo"); v.srcObject = cam.stream; await v.play().catch(() => {});
+  cam.tally = { PASS: 0, REWORK: 0, SCRAP: 0 }; cam.n = 0;
+  $("#camlive").classList.remove("hidden"); $("#camempty").classList.add("hidden");
+  $("#camstart").disabled = true; $("#camstop").disabled = false; $("#camsnap").disabled = false;
+  $("#camstat").textContent = "Camera on.";
+  camLoop();
+}
+function camStop() {
+  clearInterval(cam.timer); cam.timer = null;
+  if (cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+  cam.stream = null; $("#camvideo").srcObject = null;
+  $("#camlive").classList.add("hidden"); $("#camempty").classList.remove("hidden");
+  $("#camstart").disabled = false; $("#camstop").disabled = true; $("#camsnap").disabled = true;
+}
+$("#camstart").onclick = camStart;
+$("#camstop").onclick = () => { camStop(); $("#camstat").textContent = "Camera off."; $("#camstat").className = "note"; };
+$("#camsnap").onclick = camInspect;
+$("#camauto").onchange = camLoop;
+$("#camface").onchange = () => cam.stream && camStart();
+$("#cammodel").onchange = () => { cam.tally = { PASS: 0, REWORK: 0, SCRAP: 0 }; cam.n = 0; };
+document.addEventListener("visibilitychange", () => { if (document.hidden) camStop(); });
+
+// ---------- conveyor
+let running = false;
+$("#run").onclick = async () => {
+  if (running) return;
+  running = true; $("#run").disabled = true;
+  const tot = { PASS: 0, REWORK: 0, SCRAP: 0 };
+  for (let k = 0; k < sampleNames.length && running; k++) {
+    const n = sampleNames[k];
+    try {
+      const body = await inspectBlob(await (await fetch(`/samples/${n}`)).blob(), n);
+      DEC.forEach(d => tot[d] += body.counts[d]);
+      $("#convimg").src = "data:image/png;base64," + body.annotated_image_png_base64;
+      $("#convimg").classList.add("on"); $("#convempty").classList.add("hidden");
+      const all = DEC.reduce((a, d) => a + tot[d], 0) || 1;
+      setVerdict($("#convverdict"), body.overall, `Frame ${k + 1} of ${sampleNames.length}`,
+        `<p class="why muted">${esc(n)}</p>${tally(tot)}<dl class="facts"><dt>Devices so far</dt><dd>${all}</dd><dt>Pass rate</dt><dd>${(100 * tot.PASS / all).toFixed(0)} %</dd></dl>`);
+      $("#convbar").style.width = (100 * (k + 1) / sampleNames.length) + "%";
+      $("#convstat").textContent = `${k + 1} of ${sampleNames.length} frames inspected`;
+    } catch (e) { $("#convstat").textContent = "Inspection failed: " + e.message + "." + WARM; }
+    await new Promise(r => setTimeout(r, 600));
+  }
+  if (running) $("#convstat").textContent += ". Run complete.";
+  running = false; $("#run").disabled = false;
+};
+$("#stop").onclick = () => { if (running) { running = false; $("#convstat").textContent += ". Run stopped."; } };
+
+// ---------- analytics
+function bars(el, obj, colours) {
+  const max = Math.max(1, ...Object.values(obj));
+  el.innerHTML = Object.entries(obj).map(([k, v]) =>
+    `<div><label>${esc(nice(k))}</label><i style="width:${100 * v / max}%;background:${colours ? `var(--${k.toLowerCase()})` : "var(--accent)"}"></i><span>${v}</span></div>`).join("");
+}
+function renderAnalytics() {
+  history = loadHist();
+  const dec = { PASS: 0, REWORK: 0, SCRAP: 0 }, def = Object.fromEntries(DEFECTS.map(d => [d, 0]));
+  let ms = 0;
+  history.forEach(h => { DEC.forEach(d => dec[d] += h.counts[d]); Object.entries(h.defects).forEach(([k, v]) => def[k] = (def[k] || 0) + v); ms += h.ms; });
+  const devs = DEC.reduce((a, d) => a + dec[d], 0);
+  const pct = v => devs ? (100 * v / devs).toFixed(1) + " %" : "–";
+  $("#kpis").innerHTML = [["Frames inspected", history.length], ["Devices", devs], ["Pass rate", pct(dec.PASS)],
+    ["Rework rate", pct(dec.REWORK)], ["Scrap rate", pct(dec.SCRAP)], ["Average time per frame", history.length ? (ms / history.length).toFixed(0) + " ms" : "–"]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`).join("");
+  bars($("#bars-dec"), dec, true);
+  bars($("#bars-def"), def, false);
+  $("#hist").innerHTML = history.length ?
+    `<tr><th>Time</th><th>Image</th><th>Result</th><th class="num">Pass</th><th class="num">Rework</th><th class="num">Scrap</th><th class="num">ms</th></tr>` +
+    history.slice(-50).reverse().map(h => `<tr><td>${new Date(h.t).toLocaleTimeString()}</td><td>${esc(h.name)}</td><td>${tag(h.overall)}</td><td class="num">${h.counts.PASS}</td><td class="num">${h.counts.REWORK}</td><td class="num">${h.counts.SCRAP}</td><td class="num">${h.ms.toFixed(0)}</td></tr>`).join("") :
+    `<tr><td class="muted">No inspections yet. Inspect a sample or start a conveyor run to fill this page.</td></tr>`;
+}
+$("#clear").onclick = () => { history = []; saveHist(history); renderAnalytics(); };
+
+// ---------- rules
+fetch("/api/rules").then(r => r.json()).then(rules => {
+  let rows = `<tr><th>Defect</th><th>Measured by</th><th>Range</th><th>Verdict</th><th>Reason</th></tr>`;
+  Object.entries(rules).forEach(([cls, r]) => {
+    let lo = 0;
+    r.bands.forEach((b, i) => {
+      const hi = b.max === null ? Infinity : b.max;
+      const rng = r.metric === "count" ? "any size" : (lo === 0 ? `below ${hi}` : (hi === Infinity ? `${lo} or more` : `${lo} to ${hi}`));
+      const metric = r.metric === "count" ? "presence" : r.metric.replace("area_mm2", "area (mm²)").replace("length_mm", "length (mm)");
+      rows += `<tr><td>${i ? "" : `<b>${esc(nice(cls))}</b>`}</td><td>${i ? "" : metric}</td><td>${rng}</td><td>${tag(b.verdict)}</td><td>${esc(b.reason)}</td></tr>`;
+      lo = hi;
+    });
+  });
+  $("#rules").innerHTML = rows;
+});
+
+const TABS = ["inspect", "real", "camera", "conveyor", "analytics", "rules", "about"];
+const fromHash = () => TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "inspect";
+window.addEventListener("hashchange", () => show(fromHash()));
+show(fromHash());
+</script>
+</body>
+</html>
